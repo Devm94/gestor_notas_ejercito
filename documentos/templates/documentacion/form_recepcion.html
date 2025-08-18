@@ -1,0 +1,735 @@
+{% extends '../core/base.html' %} {% load static %} {% block 'contenido' %}
+<link
+  rel="stylesheet"
+  href="{% static 'lib/adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}"
+/>
+<link
+  rel="stylesheet"
+  href="{% static 'lib/adminlte/plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}"
+/>
+<link
+  rel="stylesheet"
+  href="{% static 'lib/adminlte/plugins/datatables-buttons/css/buttons.bootstrap4.min.css' %}"
+/>
+<style>
+  .dataTables_filter {
+    float: right;
+  }
+  .dt-buttons {
+    float: left;
+  }
+  .btn_add_req {
+    float: right;
+  }
+  .small-table {
+    font-size: 0.875em; /* Reducir el tamaño de la fuente */
+  }
+  .compact-table td,
+  .compact-table th {
+    padding: 0.5rem; /* Reducir el padding */
+  }
+</style>
+<section class="content-header"></section>
+<section class="content">
+  {% csrf_token %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Registro de Notas</h3>
+            <div class="card-tools">
+
+            </div>
+          </div>
+          <div class="card-body">
+            <table
+              id="example1"
+              class="table table-bordered table-striped table-sm compact-table"
+              style="font-size: 12px"
+            >
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Fecha</th>
+                  <th>Remitente</th>
+                  <th>Exp.</th>
+                  <th>Estado</th>
+                  <th>Responsable</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for ls_preregistro_notas in ls_preregistro_notas %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>{{ ls_preregistro_notas.fch_rcp_formateada }}</td>
+                  <td>{{ls_preregistro_notas.cod_procedencia }}</td>
+                  <td>{{ls_preregistro_notas.no_exp}}</td>
+                  <td>{{ls_preregistro_notas.cod_estado_preregistro}}</td>
+                  <td>{{ls_preregistro_notas.cod_usuario}}</td>
+                  <td>
+                    <div class="dropdown">
+                      <button
+                        class="btn btn-outline-primary btn-sm btn-block dropdown-toggle"
+                        type="button"
+                        id="accionesCentro{{ cme.id }}"
+                        data-toggle="dropdown"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                      >
+                        Acciones
+                      </button>
+                      <div
+                        class="dropdown-menu"
+                        aria-labelledby="accionesCentro{{ notas_procesadas.id }}"
+                      >
+                        <!-- <a
+                          class="dropdown-item text-success"
+                          href="#"
+                          data-toggle="modal"
+                          data-target="#modal_info_procesado"
+                          onclick="info_procesado({{notas_procesadas.id }})"
+                        >
+                          Expediente
+                        </a> -->
+                        <a
+                          class="dropdown-item text-info"
+                          href="#"
+                          data-toggle="modal"
+                          data-target="#modal_revisar"
+                          onclick="revisar({{ls_preregistro_notas.id }})"
+                        >
+                          Revisar
+                        </a>
+                        {% if ls_preregistro_notas.cod_estado_preregistro.id == 4 %}
+                        <a
+                          class="dropdown-item text-warning"
+                          href="#"
+                          data-toggle="modal"
+                          data-target="#modal_corregir"
+                          onclick="corregir({{ls_preregistro_notas.id }})"
+                        >
+                          Corregir
+                        </a>
+                        {% endif %}
+                         {% if ls_preregistro_notas.cod_estado_preregistro.id == 1 %}
+<a
+  href="{% url 'eliminar_nota' ls_preregistro_notas.id %}"
+  class="dropdown-item text-danger"
+  onclick="return confirm('¿Seguro que quieres eliminar este registro?');"
+>
+  Eliminar
+</a>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <br />
+            <div class="container">
+              <div class="btn_add_req">
+                <a
+                  href="#"
+                  class="btn btn-info"
+                  role="button"
+                  data-bs-toggle="modal"
+                  data-bs-target="#modalAgregar"
+                >
+                  Agregar <i class="bi bi-plus-circle"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<div
+  class="modal fade"
+  id="modalAgregar"
+  tabindex="-1"
+  aria-labelledby="modalAgregarLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalAgregarLabel">Registrar</h5>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
+            Cerrar
+          </button>
+      </div>
+      <form id="formAgregar" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="numExpediente" class="form-label">Num. de Exp.</label>
+              <input
+                type="text"
+                class="form-control"
+                id="numExpediente"
+                name="numExpediente"
+                required
+              />
+            </div>
+            <div class="col-md-6">
+              <label for="medio" class="form-label">Medio</label>
+              <select class="form-control" id="medio" name="medio" required>
+                {% for medio in tp_medio %}
+                <option value="{{ medio.id }}">
+                  {{ medio.descrip_corta }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="procedencia_sup" class="form-label"
+                >Procedencia</label
+              >
+              <select
+                class="form-control"
+                id="procedencia_sup"
+                name="procedencia_sup"
+                required
+              >
+                <option value="" selected>Seleccione...</option>
+                {% for procedencia in ls_procedencia %}
+                <option value="{{ procedencia.id }}">
+                  {{ procedencia.descrip_corta }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="sub_procedencia" class="form-label">Remitente</label>
+              <select
+                class="form-control"
+                id="sub_procedencia"
+                name="sub_procedencia"
+                required
+              >
+                <option value="">Seleccione...</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Adjuntar Documentos</label>
+            <div
+              id="dropzone"
+              class="border border-primary p-3 text-center"
+              ondragover="event.preventDefault();"
+            >
+              <p>
+                Arrastra y suelta archivos aquí o
+                <label
+                  for="fileInput"
+                  class="text-primary"
+                  style="cursor: pointer"
+                  >selecciona</label
+                >
+              </p>
+              <input
+                type="file"
+                id="fileInput"
+                name="arch"
+                multiple
+                accept=".pdf,image/*"
+                class="form-control d-none"
+              />
+              <ul id="fileList" class="list-unstyled mt-2"></ul>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+
+          <button type="submit" class="btn btn-primary" form="formAgregar">
+            Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<div
+  id="modal_revisar"
+  class="modal fade"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="modal_revisarLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Revisar</h5>
+        <button
+          type="button"
+          class="btn btn-close btn-light"
+          data-dismiss="modal"
+          aria-label="Cerrar"
+        >
+          Cerrar
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="R_numExpediente" class="form-label">Num. de Exp.</label>
+            <input
+              type="text"
+              class="form-control"
+              id="R_numExpediente"
+              name="R_numExpediente"
+              readonly
+            />
+          </div>
+          <div class="col-md-6">
+            <label for="medio" class="form-label">Medio</label>
+            <input
+              type="text"
+              class="form-control"
+              id="R_medio"
+              name="R_medio"
+              readonly
+            />
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="procedencia_sup" class="form-label">Procedencia</label>
+            <input
+              type="text"
+              class="form-control"
+              id="R_procedencia_sup"
+              name="R_procedencia_sup"
+              readonly
+            />
+          </div>
+          <div class="col-md-6">
+            <label for="sub_procedencia" class="form-label">Remitente</label>
+
+            <input
+              type="text"
+              class="form-control"
+              id="R_sub_procedencia"
+              name="R_sub_procedencia"
+              readonly
+            />
+          </div>
+        </div>
+        <label for="selectDocument1" class="form-label"
+          >Seleccione un documento:</label
+        >
+        <select id="selectDocumento1" class="form-select"></select>
+
+        <!-- Visualizador de PDF -->
+        <div class="mt-3">
+          <iframe
+            id="visorDocumento1"
+            src=""
+            width="100%"
+            height="600px"
+            style="border: none"
+          ></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div
+  id="modal_corregir"
+  class="modal fade"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="modal_corregirLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Corregir</h5>
+        <button
+          type="button"
+          class="btn btn-close btn-light"
+          data-dismiss="modal"
+          aria-label="Cerrar"
+        >
+          Cerrar
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="formActualizar" method="POST" enctype="multipart/form-data">
+        <div class="row mb-3">
+          <div class="col-md-6">
+                      <input type="hidden" id="id_nota_c" name="id_nota_c" />
+            <label for="c_numExpediente" class="form-label">Num. de Exp.</label>
+            <input
+              type="text"
+              class="form-control"
+              id="c_numExpediente"
+              name="c_numExpediente"
+              readonly
+            />
+          </div>
+          <div class="col-md-6">
+            <label for="medio" class="form-label">Medio</label>
+              <select class="form-control" id="c_medio" name="c_medio" required>
+                {% for medio in tp_medio %}
+                <option value="{{ medio.id }}">
+                  {{ medio.descrip_corta }}
+                </option>
+                {% endfor %}
+              </select>
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="procedencia_sup" class="form-label">Procedencia</label>
+              <select
+                class="form-control"
+                id="c_procedencia_sup"
+                name="c_procedencia_sup"
+                required
+              >
+                <option value="" selected>Seleccione...</option>
+                {% for procedencia in ls_procedencia %}
+                <option value="{{ procedencia.id }}">
+                  {{ procedencia.descrip_corta }}
+                </option>
+                {% endfor %}
+              </select>
+          </div>
+          <div class="col-md-6">
+            <label for="medio" class="form-label">Medio</label>
+              <select class="form-control" id="c_sub_procedencia" name="c_sub_procedencia" required>
+                <option value="">
+                  Seleccione
+                </option>
+              </select>
+          </div>
+        </div>
+        <label for="c_selectDocumento" class="form-label"
+          >Seleccione un documento:</label
+        >
+        <select id="c_selectDocumento" class="form-select"></select>
+
+        <!-- Visualizador de PDF -->
+        <div class="mt-3">
+          <iframe
+            id="c_visorDocumento"
+            src=""
+            width="100%"
+            height="600px"
+            style="border: none"
+          ></iframe>
+        </div>
+                <div class="modal-footer">
+
+          <button type="submit" class="btn btn-primary" form="formActualizar">
+            Actualizar
+          </button>
+        </div>
+              </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-buttons/js/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-buttons/js/buttons.bootstrap4.min.js' %}"></script>
+
+<script>
+  jQuery(document).ready(function ($) {
+    $("#example1").DataTable({
+      language: {
+        decimal: "",
+        emptyTable: "No hay datos disponibles en la tabla",
+        info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+        infoEmpty: "Mostrando 0 a 0 de 0 entradas",
+        infoFiltered: "(filtrado de _MAX_ entradas totales)",
+        infoPostFix: "",
+        thousands: ",",
+        lengthMenu: "Mostrar _MENU_ entradas",
+        loadingRecords: "Cargando...",
+        processing: "Procesando...",
+        search: "Buscar:",
+        zeroRecords: "No se encontraron registros coincidentes",
+        paginate: {
+          first: "Primero",
+          last: "Último",
+          next: "Siguiente",
+          previous: "Anterior",
+        },
+        aria: {
+          sortAscending: ": activar para ordenar la columna ascendente",
+          sortDescending: ": activar para ordenar la columna descendente",
+        },
+      },
+    });
+  });
+
+  $(document).ready(function () {
+    $("#procedencia_sup").change(function () {
+      var procedencia_id = $(this).val();
+      var url = "{% url 'load_sub_procedencias' %}";
+      if (procedencia_id) {
+        $.ajax({
+          url: url,
+          data: { procedencia_id: procedencia_id },
+          success: function (data) {
+            $("#sub_procedencia").empty(); // Limpiar el combobox de modelos
+            $("#sub_procedencia").append(
+              '<option value="" selected >Selecciona una procedencia</option>'
+            );
+            $.each(data, function (key, value) {
+              $("#sub_procedencia").append(
+                '<option value="' +
+                  value.id +
+                  '">' +
+                  value.descrip_corta +
+                  "</option>"
+              );
+            });
+          },
+        });
+      } else {
+        $("#sub_procedencia").empty();
+        $("#sub_procedencia").append(
+          '<option value="">Selecciona una procedencia</option>'
+        );
+      }
+    });
+  });
+  document.addEventListener("DOMContentLoaded", function () {
+    let fileInput = document.getElementById("fileInput");
+    let dropzone = document.getElementById("dropzone");
+    let fileList = document.getElementById("fileList");
+    let selectedFiles = new DataTransfer(); // 📌 Para manejar archivos correctamente
+
+    // 📌 Detectar archivos desde el input
+    fileInput.addEventListener("change", function (event) {
+      handleFiles(event.target.files);
+    });
+
+    // 📌 Manejar archivos cuando se arrastran al área
+    dropzone.addEventListener("drop", function (event) {
+      event.preventDefault();
+      handleFiles(event.dataTransfer.files);
+    });
+
+    dropzone.addEventListener("dragover", function (event) {
+      event.preventDefault();
+    });
+
+    // 📌 Función para manejar los archivos seleccionados
+    function handleFiles(files) {
+      for (let file of files) {
+        if (!fileExists(file)) {
+          selectedFiles.items.add(file); // Agrega el archivo a la lista de DataTransfer
+          let listItem = document.createElement("li");
+          listItem.className =
+            "d-flex justify-content-between align-items-center p-2 border rounded mt-1";
+          listItem.innerHTML = `
+                  ${file.name}
+                  <button type="button" class="btn btn-danger btn-sm ms-2" onclick="removeFile('${file.name}')">✖</button>`;
+          fileList.appendChild(listItem);
+        }
+      }
+      fileInput.files = selectedFiles.files; // Actualiza los archivos en el input
+    }
+    function fileExists(file) {
+      for (let i = 0; i < selectedFiles.files.length; i++) {
+        if (selectedFiles.files[i].name === file.name) {
+          return true;
+        }
+      }
+      return false;
+    }
+    window.removeFile = function (fileName) {
+      for (let i = 0; i < selectedFiles.items.length; i++) {
+        if (selectedFiles.items[i].getAsFile().name === fileName) {
+          selectedFiles.items.remove(i); // Elimina el archivo de la lista
+          break;
+        }
+      }
+      fileInput.files = selectedFiles.files; // Actualiza los archivos en el input
+      updateFileList();
+    };
+    function updateFileList() {
+      fileList.innerHTML = "";
+      for (let i = 0; i < selectedFiles.files.length; i++) {
+        let file = selectedFiles.files[i];
+
+        let listItem = document.createElement("li");
+        listItem.className =
+          "d-flex justify-content-between align-items-center p-2 border rounded mt-1";
+
+        listItem.innerHTML = `
+              ${file.name}
+              <button type="button" class="btn btn-danger btn-sm ms-2" onclick="removeFile('${file.name}')">✖</button>`;
+        fileList.appendChild(listItem);
+      }
+    }
+  });
+  function verArchivo(select) {
+    var url = select.value;
+    if (url) {
+      window.open(url, "_blank");
+    }
+  }
+  function corregir(id) {
+    fetch(`/revisar_recepcion_arch/${id}/`) // Vista Django que devuelve JSON con archivos
+      .then((response) => response.json())
+      .then((data) => {
+        const select = document.getElementById("c_selectDocumento");
+        const visor = document.getElementById("c_visorDocumento");
+
+        // Limpiar combobox
+        select.innerHTML = "";
+
+        // Llenar combobox con documentos
+        data.archivos.forEach((doc) => {
+          let option = document.createElement("option");
+          option.value = doc.url;
+          option.textContent = doc.nombre;
+          select.appendChild(option);
+        });
+
+        // Mostrar el primero
+        if (data.archivos.length > 0) {
+          visor.src = data.archivos[0].url;
+        }
+      });
+    fetch(`/revisar_recepcion/${id}/`)
+      .then((response) => response.json())
+      .then((data) => {
+        document.querySelector('[name="c_numExpediente"]').value = data.num_exp;
+        document.querySelector('[name="c_medio"]').value = data.c_medio;
+        document.querySelector('[name="c_procedencia_sup"]').value =
+          data.c_procedencia_sup;
+        document.querySelector('[name="id_nota_c"]').value = data.id;
+        var procedencia = data.c_procedencia;
+        var procedencia_id = data.c_procedencia_sup;
+        var url = "{% url 'load_sub_procedencias' %}";
+        if (procedencia_id) {
+          $.ajax({
+            url: url,
+            data: { procedencia_id: procedencia_id },
+            success: function (data) {
+              $("#c_sub_procedencia").empty(); // Limpiar el combobox de modelos
+              $("#c_sub_procedencia").append(
+                '<option value="" selected >Selecciona una procedencia</option>'
+              );
+              $.each(data, function (key, value) {
+                $("#c_sub_procedencia").append(
+                  '<option value="' +
+                    value.id +
+                    '">' +
+                    value.descrip_corta +
+                    "</option>"
+                );
+              });
+              document.querySelector('[name="c_sub_procedencia"]').value =
+                procedencia;
+            },
+          });
+        } else {
+          $("#c_sub_procedencia").empty();
+          $("#c_sub_procedencia").append(
+            '<option value="">Selecciona una procedencia</option>'
+          );
+        }
+      });
+  }
+
+  function revisar(id) {
+    fetch(`/revisar_recepcion_arch/${id}/`) // Vista Django que devuelve JSON con archivos
+      .then((response) => response.json())
+      .then((data) => {
+        const select = document.getElementById("selectDocumento1");
+        const visor = document.getElementById("visorDocumento1");
+
+        // Limpiar combobox
+        select.innerHTML = "";
+
+        // Llenar combobox con documentos
+        data.archivos.forEach((doc) => {
+          let option = document.createElement("option");
+          option.value = doc.url;
+          option.textContent = doc.nombre;
+          select.appendChild(option);
+        });
+
+        // Mostrar el primero
+        if (data.archivos.length > 0) {
+          visor.src = data.archivos[0].url;
+        }
+      });
+    fetch(`/revisar_recepcion/${id}/`)
+      .then((response) => response.json())
+      .then((data) => {
+        document.querySelector('[name="R_numExpediente"]').value = data.num_exp;
+        document.querySelector('[name="R_medio"]').value = data.medio;
+        document.querySelector('[name="R_procedencia_sup"]').value =
+          data.procedencia_sup;
+        document.querySelector('[name="R_sub_procedencia"]').value =
+          data.procedencia;
+      });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const formActualizar = document.getElementById("formActualizar");
+
+    formActualizar.addEventListener("submit", function (e) {
+      e.preventDefault(); // evitar el submit normal
+
+      const formData = new FormData(formActualizar);
+
+      fetch("/actualizar_preregistro_nota/", {
+        method: "POST",
+        body: formData,
+        headers: {
+          "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]")
+            .value,
+        },
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            alert("El registro fue actualizado");
+            location.reload();
+          } else {
+            Swal.fire(
+              "Error",
+              data.error || "No se pudo actualizar la nota.",
+              "error"
+            );
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          Swal.fire("Error", "Ocurrió un problema en el servidor.", "error");
+        });
+    });
+  });
+</script>
+{% endblock %}

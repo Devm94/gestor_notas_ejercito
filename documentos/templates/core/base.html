@@ -1,0 +1,167 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=0.8">
+  <title>Plataforma</title>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <link rel="stylesheet" href="{% static 'lib/adminlte/plugins/fontawesome-free/css/all.min.css' %}">
+  <link rel="stylesheet" href="{% static 'lib/adminlte/plugins/overlayScrollbars/css/OverlayScrollbars.min.css' %}">
+  <link rel="stylesheet" href="{% static 'lib/adminlte/css/adminlte.min.css' %}">
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+  integrity="sha512-dymI6lZfZQ1U3Wn3lV3MEuRk9V1l0twg2E3mhV9v6E+1TzS6H2oXkJdVYtg4N2drs7JqlmcZ3e3aJswPjuj4g=="
+  crossorigin="anonymous"
+  referrerpolicy="no-referrer"
+/>
+  <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+  <div class="wrapper">
+    {% csrf_token %}
+    {% include 'core/header.html' %}
+
+    <div class="content-wrapper">
+      {% block 'contenido' %}
+        <br />
+        <section class="content">
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h3 class="card-title">Plataforma Virtual de Correspondencia</h3>
+                    <div class="card-tools">
+                      <button
+                        type="button"
+                        class="btn btn-tool"
+                        data-card-widget="collapse"
+                        title="Collapse"
+                      >
+                        <i class="fas fa-minus"></i>
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-tool"
+                        data-card-widget="remove"
+                        title="Remove"
+                      >
+                        <i class="fas fa-times"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-lg-4 col-6">
+                        <div class="small-box bg-primary">
+                          <div class="inner">
+                            <p>Notas Recibidas</p>
+                            <h3>{{CV}}</h3>
+                          </div>
+                          <div class="icon">
+                            <i
+                              class="bi bi-building"
+                              style="font-size: 50px"
+                            ></i>
+                          </div>
+                          <a href="#" class="small-box-footer"></a>
+                        </div>
+                      </div>
+                      <div class="col-lg-4 col-6">
+                        <div class="small-box bg-secondary">
+                          <div class="inner">
+                            <p>Requerimientos Completados</p>
+                            <h3>{{ME}}</h3>
+                          </div>
+                          <div class="icon">
+                            <i
+                              class="bi bi-clipboard-data-fill"
+                              style="font-size: 50px"
+                            ></i>
+                          </div>
+                          <a href="#" class="small-box-footer"></a>
+                        </div>
+                      </div>
+                      <div class="col-lg-4 col-6">
+                        <div class="small-box bg-success">
+                          <div class="inner">
+                            <p>Requerimientos Pendientes</p>
+                            <h3>{{RH}}</h3>
+                          </div>
+                          <div class="icon">
+                            <i
+                              class="bi bi-person-fill"
+                              style="font-size: 50px"
+                            ></i>
+                          </div>
+                          <a href="#" class="small-box-footer"></a>
+                        </div>
+                      </div>
+
+                    </div>
+                    <div class="row text-center align-items-center">
+                      <div class="col-4 text-justify">
+                        <p class="small" style="text-align: justify">
+                          Misión <br />
+                          El Departamento de Comunicaciones e Informática,
+                          coordinará, regulará y controlará los procedimientos
+                          en el empleo de las comunicaciones, a través de las
+                          GG. UU, UU., UU. II y CC.EE. del Ejército, a partir
+                          del 301000OCT025, hasta la declaratoria de los
+                          resultados electorales en todo el territorio nacional,
+                          a fin de facilitar el comando y control, empleando
+                          medios disponibles para la recepción y transmisión de
+                          la información oportuna del Ejército, coadyuvando al
+                          cumplimiento de la misión de las Elecciones Generales
+                          2025.
+                        </p>
+                      </div>
+                      <div class="col-4">
+                        <img
+                          src="{% static 'img/Bicentenario.jpeg' %}"
+                          class="img-fluid "
+                          alt="Imagen central"
+                          style="border: 2px solid #ccc;"
+                        />
+                      </div>
+                      <div class="col-4 text-justify">
+                        <p class="small" style="text-align: justify">
+                          Intención del Comandante <br />
+                          El Departamento de Comunicaciones e Informática,
+                          coordinará, regulará y controlará los procedimientos
+                          en el empleo de las comunicaciones, a través de las
+                          GG. UU, UU., UU. II y CC.EE. del Ejército, a partir
+                          del 301000OCT025, hasta la declaratoria de los
+                          resultados electorales en todo el territorio nacional,
+                          a fin de facilitar el comando y control, empleando
+                          medios disponibles para la recepción y transmisión de
+                          la información oportuna del Ejército, coadyuvando al
+                          cumplimiento de la misión de las Elecciones Generales
+                          2025.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </section>
+      {% endblock %}
+    </div>
+
+    {% include 'core/footer.html' %}
+  </div>
+  <script src="{% static 'lib/adminlte/plugins/jquery/jquery.min.js' %}"></script>
+  <script src="{% static 'lib/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'lib/adminlte/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js' %}"></script>
+  <script src="{% static 'lib/adminlte/js/adminlte.min.js' %}"></script>
+</body>
+</html>

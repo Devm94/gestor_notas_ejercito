@@ -1,0 +1,387 @@
+import json
+from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404, redirect
+from django.http import JsonResponse, HttpResponse
+import pandas as pd
+from .models import *
+from django.utils.timezone import make_aware
+from datetime import datetime
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+
+from django.contrib.auth import logout
+@login_required
+def inicio(request):
+    return render(request, 'index.html')
+@login_required
+def inicio_2(request):
+    totalnotas = preregistro_nota.objects.count()
+    
+    totalnotas_completados = preregistro_nota.objects.filter(cod_estado_preregistro = estado_preregistro.objects.get(id = 7)).count()
+    totalnotas_pendientes = preregistro_nota.objects.exclude(cod_estado_preregistro = estado_preregistro.objects.get(id = 7)).count()
+    print(totalnotas)
+    print(totalnotas_completados)
+    print(totalnotas)
+    
+    context = {
+        'CV': f"{totalnotas:,}",
+        'ME' : f"{totalnotas_completados:,}",
+        'RH' : f"{totalnotas_pendientes:,}",
+    }
+    return render(request, 'core/base.html', context)
+@login_required
+def load_sub_procedencias(request):
+    procedencia_id = request.GET.get('procedencia_id')  # Obtener la ID de la marca desde la solicitud Ajax
+    sub_procedencia = procedencia.objects.filter(cod_proced_superior=procedencia_id).order_by('descrip_corta')  # Filtrar modelos por marca
+    return JsonResponse(list(sub_procedencia.values('id', 'descrip_corta')), safe=False)
+@login_required
+def form_recepcion(request):
+    ls_procedencia = procedencia.objects.filter(cod_proced_superior__isnull=True)
+    ls_preregistro_notas = preregistro_nota.objects.all()
+    medio = tp_medio.objects.all()
+    context = {'ls_procedencia' : ls_procedencia ,
+               'ls_preregistro_notas' : ls_preregistro_notas,
+               'tp_medio' : medio}
+    if request.method == "POST":
+        preregistro_c = preregistro_nota.objects.create(
+            no_exp = request.POST['numExpediente'],
+            cod_procedencia = procedencia.objects.get(id=request.POST['sub_procedencia']),
+            cod_usuario = User.objects.get(username=request.user),
+            cod_estado_preregistro = estado_preregistro.objects.get(id=1),
+            cod_medio = tp_medio.objects.get(id=request.POST['medio'])
+        ) 
+
+        for file in request.FILES.getlist('arch'):
+            preregistro_nota_arch.objects.create(
+                cod_nota=preregistro_c,
+                arch=file
+            )
+        return redirect('recepcion')
+    else:
+        #preregistro_nota.objects.all().delete()
+        return render(request, 'documentacion/form_recepcion.html', context)
+@login_required
+def form_procesamiento(request):
+    ls_tp_prioridad = tp_prioridad.objects.all()
+    ls_preregistro_notas = preregistro_nota.objects.all()
+    context = {'ls_preregistro_notas' : ls_preregistro_notas,
+               'ls_tp_prioridad' : ls_tp_prioridad}
+    if request.method == "POST":
+        print("Registrada")
+        fch_nota_c = datetime.strptime(request.POST['fch_exp'], "%Y-%m-%dT%H:%M")
+        fch_nota_c = make_aware(fch_nota_c)
+        fch_limite_c = datetime.strptime(request.POST['fch_limite'], "%Y-%m-%dT%H:%M")
+        fch_limite_c = make_aware(fch_limite_c)
+        procesamiento_nota.objects.create(
+            cod_nota = preregistro_nota.objects.get(id=request.POST['itemId']),
+            fch_exp = fch_nota_c,
+            fch_limite = fch_limite_c,
+            asunto = request.POST['asunto'],
+            contenido = request.POST['contenido'],
+            tp_prioridad = tp_prioridad.objects.get(id=request.POST['tp_prioridad']),
+            cod_usuario = User.objects.get(username=request.user),
+            )
+        nuevo_estado = estado_preregistro.objects.get(id=2)  # Ejemplo: ID del nuevo estado
+        preregistro_nota.objects.filter(id=request.POST['itemId']).update(cod_estado_preregistro=nuevo_estado)
+        return redirect('procesamiento')
+    else:
+        #preregistro_nota.objects.all().delete()
+        print("Negativo")
+        return render(request, 'documentacion/form_procesamiento.html', context)
+@login_required    
+def form_aprobacion(request):
+    ls_procedencia = procedencia.objects.filter(cod_proced_superior__isnull=True)
+    notas = procesamiento_nota.objects.all()
+    context = {
+        'ls_procedencia' : ls_procedencia ,
+        'notas_procesadas' : notas
+    }
+
+    return render(request, 'documentacion/form_aprobacion.html', context)
+@login_required
+def obtener_nota_proc(request, id):
+    nota_proces = procesamiento_nota.objects.get(pk=id)
+    fch_limite = nota_proces.fch_limite_formateada()
+    fch_exp = nota_proces.fch_exp_formateada()
+    
+    data = {
+        'id': nota_proces.id,
+        'fch_exp': fch_exp ,
+        'fch_limite': fch_limite,
+        'tp_prioridad': nota_proces.tp_prioridad.descrip_corta,
+        'asunto': nota_proces.asunto ,
+        'contenido': nota_proces.contenido ,
+        'procedencia': nota_proces.cod_nota.cod_procedencia.descrip_corta,
+        'disposicion': nota_proces.disposicion,
+    }
+    return JsonResponse(data)
+@login_required
+def revisar_recepcion(request, id):
+    nota_proces = preregistro_nota.objects.get(pk=id)
+    print(nota_proces.cod_procedencia.cod_proced_superior)
+    data = {
+        'id': id,
+        'medio': nota_proces.cod_medio.descrip_corta,
+        'num_exp': nota_proces.no_exp,
+        'procedencia': str(nota_proces.cod_procedencia),
+        'procedencia_sup': str(nota_proces.cod_procedencia.cod_proced_superior),
+        'c_medio': nota_proces.cod_medio.id,
+        'c_procedencia': nota_proces.cod_procedencia.id,
+        'c_procedencia_sup': nota_proces.cod_procedencia.cod_proced_superior.id,
+        }
+    return JsonResponse(data)
+@login_required
+def revisar_procesamiento(request, id):
+    nota_proces = procesamiento_nota.objects.get(cod_nota=preregistro_nota.objects.get(id = id))
+    fch_limite = nota_proces.fch_limite_formateada()
+    fch_exp = nota_proces.fch_exp_formateada()
+    
+    data = {
+        'id': nota_proces.id,
+        'fch_exp': fch_exp ,
+        'fch_limite': fch_limite,
+        'tp_prioridad': nota_proces.tp_prioridad.descrip_corta,
+        'asunto': nota_proces.asunto ,
+        'contenido': nota_proces.contenido ,
+        'procedencia': nota_proces.cod_nota.cod_procedencia.descrip_corta,
+        'disposicion': nota_proces.disposicion,
+    }
+    return JsonResponse(data)
+@login_required
+def expediente_json(request, procesamiento_id):
+    procesamiento = procesamiento_nota.objects.get(id=procesamiento_id)
+    archivos = preregistro_nota_arch.objects.filter(cod_nota=procesamiento.cod_nota)
+
+    data = {
+        "archivos": [
+            {"nombre": a.nombre_archivo, "url": a.arch.url}
+            for a in archivos
+        ]
+    }
+    return JsonResponse(data)
+
+@login_required
+def revisar_recepcion_arch(request, procesamiento_id):
+    print(procesamiento_id)
+    procesamiento = preregistro_nota.objects.get(id=procesamiento_id)
+    archivos = preregistro_nota_arch.objects.filter(cod_nota=procesamiento)
+
+    data = {
+        "archivos": [
+            {"nombre": a.nombre_archivo, "url": a.arch.url}
+            for a in archivos
+        ]
+    }
+    return JsonResponse(data)
+def expediente_json_procesamiento(request, procesamiento_id):
+    procesamiento = preregistro_nota.objects.get(id=procesamiento_id)
+    
+    archivos = preregistro_nota_arch.objects.filter(cod_nota=procesamiento)
+    print(archivos)
+    data = {
+        "archivos": [
+            {"nombre": a.nombre_archivo, "url": a.arch.url}
+            for a in archivos
+        ]
+        
+    }
+    print(data)
+    return JsonResponse(data)
+@login_required
+@csrf_exempt
+def registrar_disposicion(request):
+    if request.method == 'POST':
+        try:
+            item_id = request.POST.get('itemIdx')
+            contenido = request.POST.get('contenido')
+            destinatarios_json = request.POST.get('destinatarios')
+            proc = procesamiento_nota.objects.get(id=item_id)
+            proc.disposicion = contenido
+
+            nota_preregistro = preregistro_nota.objects.get(id = proc.cod_nota.id)
+            nota_preregistro.cod_estado_preregistro = estado_preregistro.objects.get(id = 8)
+            nota_preregistro.save()
+            proc.save()
+            if destinatarios_json:
+                destinatarios = json.loads(destinatarios_json)
+                for dest in destinatarios:
+                    sub_procedencia_id = dest.get('sub_procedencia')
+                    notaxprocedencia.objects.create(
+                        cod_nota_id=item_id,
+                        cod_procedencia=procedencia.objects.get(id=sub_procedencia_id)
+                        )
+            return JsonResponse({'status': 'ok', 'message': 'Disposición y destinatarios registrados correctamente.'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
+
+@login_required
+def bandeja(request):
+    
+    if request.user.is_superuser:
+        notas = notaxprocedencia.objects.all().order_by('cod_estado_cumplimiento')
+    else:
+        perfil = PerfilUsuario.objects.get(usuario=request.user)
+        print(perfil)
+        id_procedencia = perfil.unidad_militar.pk
+        print(id_procedencia)
+        procedencia_padre = procedencia.objects.get(id=id_procedencia)
+        todos_los_ids = obtener_subprocedencias(procedencia_padre)
+        print(todos_los_ids)
+        notas = notaxprocedencia.objects.filter(cod_procedencia__in=todos_los_ids).order_by('cod_estado_cumplimiento') # Incluir la procedencia principal
+    context = {
+        'notas': notas,
+    }
+    return render(request, 'documentacion/bandeja.html', context)
+    
+@csrf_exempt
+@login_required
+def registrar_cumplimiento(request):
+    if request.method == 'POST':
+        try:
+            item_id = request.POST.get('itemIdx')
+            cumplimiento = request.POST.get('cumplimiento')
+            proc = notaxprocedencia.objects.get(id=item_id)
+            proc.Observacion = cumplimiento
+            proc.cod_estado_cumplimiento = estado_cumplimiento.objects.get(id=2)
+            for file in request.FILES.getlist('arch'):
+                evidencia_cumpli_nota_arch.objects.create(
+                cod_nota=notaxprocedencia.objects.get(id=item_id),
+                arch=file
+            )
+            proc.save()
+            nota = proc.cod_nota  # Relación hacia preregistro_nota
+            pendientes = notaxprocedencia.objects.filter(cod_nota=nota).exclude(cod_estado_cumplimiento__id=2).exists()
+            print(pendientes)
+            if not pendientes:
+                print("entro")
+                completado = preregistro_nota.objects.get(id = nota.cod_nota.id)
+                completado.cod_estado_preregistro = estado_preregistro.objects.get(id=7)  # Ejemplo: 9 = "Cumplido"
+                print(nota)
+                completado.save()  
+            return JsonResponse({'status': 'ok', 'message': 'Disposición y destinatarios registrados correctamente.'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
+
+@login_required
+def cumplimiento_json(request, cumplimiento_id):
+    print(cumplimiento_id)
+    procesamiento = notaxprocedencia.objects.get(id=cumplimiento_id)
+    archivos = evidencia_cumpli_nota_arch.objects.filter(cod_nota=procesamiento)
+    cumplimiento =  procesamiento.Observacion
+    print(archivos)
+    print(cumplimiento)
+    data = {
+        "archivos": [
+            {"nombre": a.nombre_archivo, "url": a.arch.url}
+            for a in archivos
+        ],
+        'cumplimiento' : cumplimiento, 
+    }
+    return JsonResponse(data)
+def cerrar_sesion(request):
+    logout(request)
+    return redirect(inicio_2) 
+
+def obtener_subprocedencias(procedencia):
+    subcategorias = procedencia.subcategorias.all()
+    if not subcategorias:
+        return {procedencia.id}  # solo el padre si no hay hijos
+
+    subprocedencias = set()
+    for sub in subcategorias:
+        subprocedencias.add(sub.id)
+        subprocedencias.update(obtener_subprocedencias(sub))
+    return subprocedencias
+
+def cumplimiento_por_nota(request, cumplimiento_id):
+    # Filtramos las procedencias de la nota
+    procedencias = notaxprocedencia.objects.filter(cod_nota__id=cumplimiento_id)
+    
+    data = []
+    for proc in procedencias:
+        # Obtenemos las evidencias de cumplimiento asociadas a esa procedencia
+        evidencias = evidencia_cumpli_nota_arch.objects.filter(cod_nota=proc)
+        evidencias_data = [
+            {
+                "id": ev.id,
+                "nombre": ev.nombre_archivo,
+                "archivo": ev.arch.url if ev.arch else None,
+            }
+            for ev in evidencias
+        ]
+
+        data.append({
+            "id": proc.id,
+            "procedencia": proc.cod_procedencia.nombre if hasattr(proc.cod_procedencia, "nombre") else str(proc.cod_procedencia),
+            "estado_cumplimiento": proc.cod_estado_cumplimiento.descrip_corta,
+            "observacion": proc.Observacion,
+            "clase_prioridad": proc.clase_prioridad(),
+            "documentos": evidencias_data,
+        })
+
+    return JsonResponse(data, safe=False)
+
+@csrf_exempt  # si usas fetch, asegúrate de mandar el CSRF en headers
+def actualizar_nota(request):
+    if request.method == "POST":
+        nota_id = request.POST.get("id_nota_c")
+        nota_exp = request.POST.get("c_numExpediente")
+        medio_id = request.POST.get("c_medio")
+        sub_procedencia_id = request.POST.get("c_sub_procedencia")
+
+        try:
+            nota = preregistro_nota.objects.get(id=nota_id)
+            nota.medio_id = medio_id
+            nota.no_exp = nota_exp
+            nota.cod_procedencia = procedencia.objects.get(id=sub_procedencia_id)
+            nota.cod_estado_preregistro = estado_preregistro.objects.get(id=5)
+            nota.save()
+
+            return JsonResponse({
+                "success": True,
+                "nota_id": nota.id,
+                "estado": nota.no_exp,
+                "procedencia": nota.cod_procedencia.descrip_corta,
+            })
+        except preregistro_nota.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Nota no encontrada"})
+    
+    return JsonResponse({"success": False, "error": "Método no permitido"})
+
+def eliminar_nota(request, id):
+    nota = get_object_or_404(preregistro_nota, id=id)
+    nota.delete()
+    return redirect('recepcion')  # Cambia por la URL de tu lista
+
+@login_required
+def obtener_disposicion(request, id):
+    nota_proces = procesamiento_nota.objects.get(pk=id)
+    
+    data = {
+        'id': nota_proces.id,
+        'disposicion': nota_proces.disposicion or "",
+    }
+    return JsonResponse(data)
+
+
+def nota_destinatarios(request, id):
+    try:
+        nota = procesamiento_nota.objects.get(id=id)
+    except procesamiento_nota.DoesNotExist:
+        return JsonResponse({"error": "Nota no encontrada"}, status=404)
+
+    # Obtener destinatarios relacionados
+    destinatarios = notaxprocedencia.objects.filter(cod_nota=nota)
+
+    destinatarios_data = []
+    for d in destinatarios:
+        destinatarios_data.append({
+            "id": d.id,
+            "procedencia_id": d.cod_procedencia.id,
+            "procedencia_nombre": d.cod_procedencia.descrip_corta,
+            "observacion": d.Observacion or ""
+        })
+
+    return JsonResponse({"nota_id": nota.id, "destinatarios": destinatarios_data})

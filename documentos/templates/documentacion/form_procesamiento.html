@@ -1,0 +1,482 @@
+{% extends '../core/base.html' %} {% load static %} {% block 'contenido' %}
+<link
+  rel="stylesheet"
+  href="{% static 'lib/adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}"
+/>
+<link
+  rel="stylesheet"
+  href="{% static 'lib/adminlte/plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}"
+/>
+<link
+  rel="stylesheet"
+  href="{% static 'lib/adminlte/plugins/datatables-buttons/css/buttons.bootstrap4.min.css' %}"
+/>
+<style>
+  .dataTables_filter {
+    float: right;
+  }
+  .dt-buttons {
+    float: left;
+  }
+  .btn_add_req {
+    float: right;
+  }
+  .small-table {
+    font-size: 0.875em; /* Reducir el tamaño de la fuente */
+  }
+  .compact-table td,
+  .compact-table th {
+    padding: 0.5rem; /* Reducir el padding */
+  }
+</style>
+<section class="content-header"></section>
+<section class="content">
+  {% csrf_token %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Procesamiento de las Notas</h3>
+            <div class="card-tools">
+            </div>
+          </div>
+          <div class="card-body">
+            <table
+              id="example1"
+              class="table table-bordered table-striped table-sm compact-table"
+              style="font-size: 12px"
+            >
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Fecha</th>
+                  <th>Remitente</th>
+                  <th>Exp.</th>
+                  <th>Estado</th>
+                  <th>Responsable</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for ls_preregistro_notas in ls_preregistro_notas %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>{{ ls_preregistro_notas.fch_rcp_formateada }}</td>
+                  <td>{{ls_preregistro_notas.cod_procedencia }}</td>
+                  <td>{{ls_preregistro_notas.no_exp}}</td>
+                  <td>{{ls_preregistro_notas.cod_estado_preregistro}}</td>
+                  <td>{{ls_preregistro_notas.cod_usuario}}</td>
+                  <td>
+                    <div class="dropdown">
+                      <button
+                        class="btn btn-outline-primary btn-sm btn-block dropdown-toggle"
+                        type="button"
+                        id="accionesCentro{{ cme.id }}"
+                        data-toggle="dropdown"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                      >
+                        Acciones
+                      </button>
+                      <div
+                        class="dropdown-menu"
+                        aria-labelledby="accionesCentro{{ notas_procesadas.id }}"
+                      >
+                        <!-- <a
+                          class="dropdown-item text-success"
+                          href="#"
+                          data-toggle="modal"
+                          data-target="#modal_info_procesado"
+                          onclick="info_procesado({{notas_procesadas.id }})"
+                        >
+                          Expediente
+                        </a> -->
+{% comment %}                         {% if ls_preregistro_notas.cod_estado_preregistro.id == 1  %}
+                        <a
+                          class="dropdown-item text-success"
+                          href="#"
+                          data-toggle="modal"
+                          data-target="#modal_info_aprobado"
+                          onclick="llenarItemId({{ ls_preregistro_notas.id }})"
+                        >
+                          Corregir
+                        </a>
+                        {% endif %}  {% endcomment %}
+                        {% if ls_preregistro_notas.cod_estado_preregistro.id == 1  %}
+                        <a
+                          class="dropdown-item text-info"
+                          href="#"
+                          data-toggle="modal"
+                          data-target="#modalAgregar"
+                          onclick="procesar({{ls_preregistro_notas.id }})"
+                        >
+                          Procesar
+                        </a>
+                        {% endif %} 
+                        {% if ls_preregistro_notas.cod_estado_preregistro.id > 2  %}
+                                                <a
+                          class="dropdown-item text-info"
+                          href="#"
+                          data-toggle="modal"
+                          data-target="#modalrevisar"
+                          onclick="revisar({{ls_preregistro_notas.id }})"
+                        >
+                          Revisar
+                        </a>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div
+  id="modalAgregar"
+  class="modal fade"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="modal_info_procesadoLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    a
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Procesar documentación</h5>
+        <button
+          type="button"
+          class="btn btn-close btn-light"
+          data-dismiss="modal"
+          aria-label="Cerrar"
+        >
+          Cerrar
+        </button>
+      </div>
+      <div class="modal-body">
+      <form id="formAgregar" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+          <input type="hidden" id="itemId" name="itemId" />
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="fechaNota" class="form-label">Fecha de Nota</label>
+              <input
+                type="datetime-local"
+                class="form-control"
+                id="fch_exp"
+                name="fch_exp"
+                required
+              />
+            </div>
+            <div class="col-md-6">
+              <label for="fechaLimite" class="form-label">Fecha Límite</label>
+              <input
+                type="datetime-local"
+                class="form-control"
+                id="fch_limite"
+                name="fch_limite"
+                required
+              />
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <label for="prioridad" class="form-label">Prioridad</label>
+              <select
+                class="form-control"
+                id="tp_prioridad"
+                name="tp_prioridad"
+                required
+              >
+                <option value="" selected>Seleccione...</option>
+                {% for prioridad in ls_tp_prioridad %}
+                <option value="{{ prioridad.id }}">
+                  {{ prioridad.descrip_corta }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <label for="asunto" class="form-label">Asunto</label>
+              <input
+                type="text"
+                class="form-control"
+                id="asunto"
+                name="asunto"
+                required
+              />
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <label for="contenido" class="form-label">Contenido</label>
+              <textarea
+                class="form-control"
+                id="contenido"
+                name="contenido"
+                rows="3"
+                required
+              ></textarea>
+            </div>
+          </div>
+                    <label for="selectDocumento" class="form-label"
+            >Seleccione un documento:</label
+          >
+          <select id="selectDocumento" class="form-select"></select>
+            <iframe
+              id="visorDocumento"
+              src=""
+              width="100%"
+              height="600px"
+              style="border: none"
+            ></iframe>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary" form="formAgregar">
+            Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<div
+  id="modalrevisar"
+  class="modal fade"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="modalrevisarLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    a
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Revisión de Documentación Procesada</h5>
+        <button
+          type="button"
+          class="btn btn-close btn-light"
+          data-dismiss="modal"
+          aria-label="Cerrar"
+        >
+          Cerrar
+        </button>
+      </div>
+      <div class="modal-body">
+      <form id="formAgregar" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+          <input type="hidden" id="r_itemId" name="itemId" />
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="fechaNota" class="form-label">Fecha de Nota</label>
+            <input
+              type="text"
+              class="form-control"
+              id="r_fch_exp"
+              name="r_fch_exp"
+              readonly
+            />
+          </div>
+          <div class="col-md-6">
+            <label for="fechaLimite" class="form-label">Fecha Límite</label>
+            <input
+              type="text"
+              class="form-control"
+              id="r_fch_limite"
+              name="r_fch_limite"
+              readonly
+            />
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <label for="prioridad" class="form-label">Prioridad</label>
+            <input
+              type="text"
+              class="form-control"
+              id="r_tp_prioridad"
+              name="r_tp_prioridad"
+              readonly
+            />
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <label for="asunto" class="form-label">Procedencia</label>
+            <input
+              type="text"
+              class="form-control"
+              id="r_procedencia"
+              name="r_procedencia"
+              readonly
+            />
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <label for="asunto" class="form-label">Asunto</label>
+            <input
+              type="text"
+              class="form-control"
+              id="r_asunto"
+              name="r_asunto"
+              readonly
+            />
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <label for="contenido" class="form-label">Contenido</label>
+            <textarea
+              class="form-control"
+              id="r_contenido"
+              name="r_contenido"
+              rows="3"
+              readonly
+            ></textarea>
+          </div>
+        </div>
+    
+                    <label for="r_selectDocumento" class="form-label"
+            >Seleccione un documento:</label
+          >
+          <select id="r_selectDocumento" class="form-select"></select>
+            <iframe
+              id="r_visorDocumento"
+              src=""
+              width="100%"
+              height="600px"
+              style="border: none"
+            ></iframe>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-buttons/js/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-buttons/js/buttons.bootstrap4.min.js' %}"></script>
+<script>
+  jQuery(document).ready(function ($) {
+    $("#example1").DataTable({
+      language: {
+        decimal: "",
+        emptyTable: "No hay datos disponibles en la tabla",
+        info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+        infoEmpty: "Mostrando 0 a 0 de 0 entradas",
+        infoFiltered: "(filtrado de _MAX_ entradas totales)",
+        infoPostFix: "",
+        thousands: ",",
+        lengthMenu: "Mostrar _MENU_ entradas",
+        loadingRecords: "Cargando...",
+        processing: "Procesando...",
+        search: "Buscar:",
+        zeroRecords: "No se encontraron registros coincidentes",
+        paginate: {
+          first: "Primero",
+          last: "Último",
+          next: "Siguiente",
+          previous: "Anterior",
+        },
+        aria: {
+          sortAscending: ": activar para ordenar la columna ascendente",
+          sortDescending: ": activar para ordenar la columna descendente",
+        },
+      },
+    });
+  });
+  function verArchivo(select) {
+    var url = select.value;
+    if (url) {
+      window.open(url, "_blank");
+    }
+  }
+  function procesar(procesamiento_id) {
+    fetch(`/expediente_json_procesamiento/${procesamiento_id}/`) // Vista Django que devuelve JSON con archivos
+      .then((response) => response.json())
+      .then((data) => {
+        const select = document.getElementById("selectDocumento");
+        const visor = document.getElementById("visorDocumento");
+        document.querySelector('[name="itemId"]').value = procesamiento_id;
+        // Limpiar combobox
+        select.innerHTML = "";
+
+        // Llenar combobox con documentos
+        data.archivos.forEach((doc) => {
+          let option = document.createElement("option");
+          option.value = doc.url;
+          option.textContent = doc.nombre;
+          select.appendChild(option);
+        });
+
+        // Mostrar el primero
+        if (data.archivos.length > 0) {
+          visor.src = data.archivos[0].url;
+        }
+      });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    var modal = document.getElementById("modalAgregar");
+    modal.addEventListener("show.bs.modal", function (event) {
+      var button = event.relatedTarget; // Botón que activó el modal
+      var itemId = button.getAttribute("data-id"); // Obtiene el ID
+      var inputHidden = modal.querySelector("#itemId");
+      inputHidden.value = itemId;
+    });
+  });
+
+    function revisar(id) {
+    fetch(`/expediente_json_procesamiento/${id}/`) // Vista Django que devuelve JSON con archivos
+      .then((response) => response.json())
+      .then((data) => {
+        const select = document.getElementById("r_selectDocumento");
+        const visor = document.getElementById("r_visorDocumento");
+
+        select.innerHTML = "";
+
+        // Llenar combobox con documentos
+        data.archivos.forEach((doc) => {
+          
+          let option = document.createElement("option");
+          option.value = doc.url;
+          option.textContent = doc.nombre;
+          select.appendChild(option);
+        });
+
+        // Mostrar el primero
+        if (data.archivos.length > 0) {
+          visor.src = data.archivos[0].url;
+        }
+      });
+    fetch(`/revisar_procesamiento/${id}/`)
+      .then((response) => response.json())
+      .then((data) => {
+                document.getElementById("itemId").value = data.id;
+        document.querySelector('[name="r_fch_exp"]').value = data.fch_exp;
+        document.querySelector('[name="r_fch_limite"]').value = data.fch_limite;
+        document.querySelector('[name="r_tp_prioridad"]').value =
+          data.tp_prioridad;
+        document.querySelector('[name="r_asunto"]').value = data.asunto;
+        document.querySelector('[name="r_contenido"]').value = data.contenido;
+        document.querySelector('[name="r_procedencia"]').value = data.procedencia;
+      });
+  }
+</script>
+
+{% endblock %}

@@ -1,0 +1,737 @@
+{% extends '../core/base.html' %} {% load static %} {% block 'contenido' %}
+<link
+  rel="stylesheet"
+  href="{% static 'lib/adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}"
+/>
+<link
+  rel="stylesheet"
+  href="{% static 'lib/adminlte/plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}"
+/>
+<link
+  rel="stylesheet"
+  href="{% static 'lib/adminlte/plugins/datatables-buttons/css/buttons.bootstrap4.min.css' %}"
+/>
+<style>
+  .prioridad-alta {
+    background-color: #f8d7da !important;; /* rojo suave */
+}
+.prioridad-media {
+    background-color: #fff3cd !important;; /* amarillo suave */
+}
+.prioridad-baja {
+    background-color: #d1ecf1 !important;; /* azul claro */
+}
+
+/* Opcional: bordes suaves para mejor estética */
+.prioridad-alta, .prioridad-media, .prioridad-baja {
+    border-left: 5px solid !important;;
+}
+.prioridad-alta { border-color: #f5c6cb !important;; }
+.prioridad-media { border-color: #ffeeba !important;; }
+.prioridad-baja { border-color: #bee5eb !important;; }
+</style>
+<section class="content-header"></section>
+<section class="content">
+  {% csrf_token %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Gestión de Notas</h3>
+            <div class="card-tools"></div>
+          </div>
+          <div class="card-body">
+            <table
+              id="example1"
+              class="table table-bordered  table-striped table-sm compact-table"
+              style="font-size: 12px"
+            >
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Procedencia</th>
+                  <th>Fecha</th>
+                  <th>Fecha Limite</th>
+                  <th>Exp.</th>
+                  <th>Prioridad</th>
+                  <th>Estado</th>
+                  <th>Responsable</th>
+                  <th>Aprobar</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for notas_procesadas in notas_procesadas %}
+                <tr class="{{ notas_procesadas.clase_prioridad }}">
+                  <td>{{ forloop.counter }}</td>
+                  <td>{{ notas_procesadas.cod_nota.cod_procedencia }}</td>
+                  <td>{{ notas_procesadas.fch_exp_formateada }}</td>
+                  <td>{{ notas_procesadas.fch_limite_formateada }}</td>
+                  <td>{{notas_procesadas.cod_nota.no_exp}}</td>
+                  <td>{{notas_procesadas.tp_prioridad}}</td>
+                  <td>{{notas_procesadas.cod_nota.cod_estado_preregistro}}</td>
+                  <td>{{notas_procesadas.cod_usuario}}</td>
+                  <td>
+                    <div class="dropdown">
+                      <button
+                        class="btn btn-outline-primary btn-sm btn-block dropdown-toggle"
+                        type="button"
+                        id="accionesCentro{{ cme.id }}"
+                        data-toggle="dropdown"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                      >
+                        Acciones
+                      </button>
+                      <div
+                        class="dropdown-menu"
+                        aria-labelledby="accionesCentro{{ notas_procesadas.id }}"
+                      >
+                        <a
+                          class="dropdown-item text-success"
+                          href="#"
+                          data-toggle="modal"
+                          data-target="#modal_info_procesado"
+                          onclick="info_procesado({{notas_procesadas.id }})"
+                        >
+                          Detalles
+                        </a>
+                        <a
+                          class="dropdown-item text-success"
+                          href="#"
+                          data-toggle="modal"
+                          data-target="#modal_info_aprobado"
+                          onclick="llenarItemId({{ notas_procesadas.id }})"
+                        >
+                          Disposición
+                        </a>
+                        <a
+                          class="dropdown-item text-info"
+                          href="#"
+                          data-toggle="modal"
+                          data-target="#modal_expediente"
+                          onclick="ver_cumplimiento({{notas_procesadas.id }})"
+                        >
+                          Cumplimiento
+                        </a>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<div
+  id="modal_info_procesado"
+  class="modal fade"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="modal_info_procesadoLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    a
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Detalles de la Documentación</h5>
+        <button
+          type="button"
+          class="btn btn-close btn-light"
+          data-dismiss="modal"
+          aria-label="Cerrar"
+        >
+          Cerrar
+        </button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="itemId" name="itemId" />
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="fechaNota" class="form-label">Fecha de Nota</label>
+            <input
+              type="text"
+              class="form-control"
+              id="fch_exp"
+              name="fch_exp"
+              readonly
+            />
+          </div>
+          <div class="col-md-6">
+            <label for="fechaLimite" class="form-label">Fecha Límite</label>
+            <input
+              type="text"
+              class="form-control"
+              id="fch_limite"
+              name="fch_limite"
+              readonly
+            />
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <label for="prioridad" class="form-label">Prioridad</label>
+            <input
+              type="text"
+              class="form-control"
+              id="tp_prioridad"
+              name="tp_prioridad"
+              readonly
+            />
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <label for="asunto" class="form-label">Procedencia</label>
+            <input
+              type="text"
+              class="form-control"
+              id="procedencia"
+              name="procedencia"
+              readonly
+            />
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <label for="asunto" class="form-label">Asunto</label>
+            <input
+              type="text"
+              class="form-control"
+              id="asunto"
+              name="asunto"
+              readonly
+            />
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <label for="contenido1" class="form-label">Contenido</label>
+            <textarea
+              class="form-control"
+              id="contenido1"
+              name="contenido1"
+              rows="3"
+              readonly
+            ></textarea>
+          </div>
+        </div>
+        <!-- Combobox para seleccionar documento -->
+        <label for="selectDocumento" class="form-label"
+          >Seleccione un documento:</label
+        >
+        <select id="selectDocumento" class="form-select"></select>
+
+        <!-- Visualizador de PDF -->
+        <div class="mt-3">
+          <iframe
+            id="visorDocumento"
+            src=""
+            width="100%"
+            height="600px"
+            style="border: none"
+          ></iframe>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <small class="text-muted"
+          >Complete todos los campos requeridos antes de guardar.</small
+        >
+      </div>
+    </div>
+  </div>
+</div>
+<div
+  id="modal_info_aprobado"
+  class="modal fade"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="modal_info_aprobadoLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header ">
+        <h5 class="modal-title">Enviar Disposición</h5>
+        <button
+          type="button"
+          class="btn btn-close btn-light"
+          data-dismiss="modal"
+          aria-label="Cerrar"
+        >
+          Cerrar
+        </button>
+      </div>
+      <div class="modal-body">
+        <form
+          id="formRegistroCME"
+          method="POST"
+          enctype="multipart/form-data"
+          onsubmit="registrar_disposicion(event)"
+        >
+          <input type="hidden" id="itemIdx" name="itemIdx" />
+
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <label for="contenido" class="form-label">Disposición</label>
+              <textarea
+                class="form-control"
+                id="contenido"
+                name="contenido"
+                rows="3"
+                required
+              ></textarea>
+
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-5">
+              <label for="procedencia_sup" class="form-label"
+                >Procedencia</label
+              >
+              <select
+                class="form-control"
+                id="procedencia_sup"
+                name="procedencia_sup"
+                required
+              >
+                <option value="" selected>Seleccione...</option>
+                {% for procedencia in ls_procedencia %}
+                <option value="{{ procedencia.id }}">
+                  {{ procedencia.descrip_corta }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-5">
+              <label for="sub_procedencia" class="form-label">Remitente</label>
+              <select
+                class="form-control"
+                id="sub_procedencia"
+                name="sub_procedencia"
+                required
+              >
+                <option value="">Seleccione...</option>
+              </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+              <button
+                type="button"
+                class="btn btn-success btn-block"
+                onclick="agregarDestinatario()"
+              >
+                Agregar
+              </button>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <ul id="listaDestinatarios" class="list-group"></ul>
+            </div>
+          </div>
+          <input type="hidden" name="destinatarios" id="destinatariosInput" />
+          <div class="text-center">
+            <button type="submit" class="btn btn-primary btn-sm">
+              <i class="fas fa-save"></i> Guardar Registro
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <small class="text-muted"
+          >Complete todos los campos requeridos antes de guardar.</small
+        >
+      </div>
+    </div>
+  </div>
+</div>
+<div
+  id="modal_expediente"
+  class="modal fade"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="modal_ver_expedienteLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cumplimiento del Requerimiento</h5>
+        <button
+          type="button"
+          class="btn btn-close btn-light"
+          data-dismiss="modal"
+          aria-label="Cerrar"
+        >
+          Cerrar
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="listaRequerimientos"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-buttons/js/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-buttons/js/buttons.bootstrap4.min.js' %}"></script>
+<script>
+  $("#example1").DataTable({
+    language: {
+      decimal: "",
+      emptyTable: "No hay datos disponibles en la tabla",
+      info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+      infoEmpty: "Mostrando 0 a 0 de 0 entradas",
+      infoFiltered: "(filtrado de _MAX_ entradas totales)",
+      infoPostFix: "",
+      thousands: ",",
+      lengthMenu: "Mostrar _MENU_ entradas",
+      loadingRecords: "Cargando...",
+      processing: "Procesando...",
+      search: "Buscar:",
+      zeroRecords: "No se encontraron registros coincidentes",
+      paginate: {
+        first: "Primero",
+        last: "Último",
+        next: "Siguiente",
+        previous: "Anterior",
+      },
+      aria: {
+        sortAscending: ": activar para ordenar la columna ascendente",
+        sortDescending: ": activar para ordenar la columna descendente",
+      },
+    },
+  });
+
+  function info_procesado(id) {
+    fetch(`/info_procesada/obtener/${id}/`)
+      .then((response) => response.json())
+      .then((data) => {
+        document.getElementById("itemId").value = data.id;
+        document.querySelector('[name="fch_exp"]').value = data.fch_exp;
+        document.querySelector('[name="fch_limite"]').value = data.fch_limite;
+        document.querySelector('[name="tp_prioridad"]').value =
+          data.tp_prioridad;
+        document.querySelector('[name="asunto"]').value = data.asunto;
+        document.querySelector('[name="contenido1"]').value = data.contenido;
+        document.querySelector('[name="procedencia"]').value = data.procedencia;
+      });
+    fetch(`/expediente/${id}/`) // Vista Django que devuelve JSON con archivos
+      .then((response) => response.json())
+      .then((data) => {
+        const select = document.getElementById("selectDocumento");
+        const visor = document.getElementById("visorDocumento");
+
+        // Limpiar combobox
+        select.innerHTML = "";
+
+        // Llenar combobox con documentos
+        data.archivos.forEach((doc) => {
+          let option = document.createElement("option");
+          option.value = doc.url;
+          option.textContent = doc.nombre;
+          select.appendChild(option);
+        });
+
+        // Mostrar el primero
+        if (data.archivos.length > 0) {
+          visor.src = data.archivos[0].url;
+        }
+      });
+  }
+
+  function ver_cumplimiento(cumplimiento_id) {
+    fetch(`/ver_cumplimiento_nota/${cumplimiento_id}/`) // Vista Django que devuelve JSON con archivos
+      .then((response) => response.json())
+      .then((data) => {
+        const contenedor = document.getElementById("listaRequerimientos");
+        contenedor.innerHTML = "";
+        if (data.length === 0) {
+          contenedor.innerHTML = "<p>No hay requerimientos completados.</p>";
+        } else {
+          const tabla = document.createElement("table");
+          tabla.classList.add("table", "table-striped", "table-bordered");
+          const thead = document.createElement("thead");
+          thead.innerHTML = `
+          <tr>
+              <th>No.</th>
+              <th>Procedencia</th>
+              <th>Estado</th>
+              <th>Expediente</th>
+          </tr>`;
+          tabla.appendChild(thead);
+          const tbody = document.createElement("tbody");
+          data.forEach((req, index) => {
+            const fila = document.createElement("tr");
+            fila.innerHTML = `
+              <td>${index + 1}</td>
+              <td>${req.procedencia}</td>
+              <td>${req.estado_cumplimiento}</td>
+              <td>
+                  <button class="btn btn-sm btn-info" onclick="abrirCollapse('${index}', this)">
+                      Ver expediente
+                  </button>
+                  <button class="btn btn-sm btn-danger d-none" onclick="cerrarCollapse('${index}', this)">
+                      Cerrar
+                  </button>
+              </td>
+          `;
+            tbody.appendChild(fila);
+
+            const filaDetalles = document.createElement("tr");
+            filaDetalles.innerHTML = `
+              <td colspan="4" class="p-0 border-0">
+                  <div id="${index}" class="collapse p-2">
+                      ${generarDetalleExpediente(req)}
+                  </div>
+              </td>
+          `;
+            tbody.appendChild(filaDetalles);
+
+            tabla.appendChild(tbody);
+            contenedor.appendChild(tabla);
+            const select = document.getElementById(`selectDocumento-${req.id}`);
+const visor = document.getElementById(`visorDocumento-${req.id}`);
+
+if (select && visor) {
+    select.addEventListener('change', () => {
+        visor.src = select.value;
+    });
+}
+          });
+        }
+      });
+  }
+
+  function abrirCollapse(id, botonVer) {
+
+    const collapseElement = document.getElementById(id);
+    const bsCollapse = new bootstrap.Collapse(collapseElement, {
+      toggle: true,
+    });
+
+    // Mostrar el botón de cerrar
+    const botonCerrar = botonVer.nextElementSibling;
+    botonCerrar.classList.remove("d-none");
+    botonVer.classList.add("d-none");
+  }
+  function cerrarCollapse(id, botonCerrar) {
+    const collapseElement = document.getElementById(id);
+    const bsCollapse = new bootstrap.Collapse(collapseElement, {
+      toggle: false,
+    });
+    bsCollapse.hide();
+
+    // Mostrar el botón de ver nuevamente
+    const botonVer = botonCerrar.previousElementSibling;
+    botonVer.classList.remove("d-none");
+    botonCerrar.classList.add("d-none");
+  }
+  function generarDetalleExpediente(req) {
+    let html = `
+          <div class="card">
+              <div class="card-body">
+                  <h6 class="fw-bold">Disposición</h6>
+                  <p>${
+                    req.observacion ||
+                    '<span class="text-muted">Sin disposición registrada</span>'
+                  }</p>
+                <h6 class="fw-bold mt-3">Procedencia / Remitente</h6>
+                <div class="row">
+                    <div class="col-md-12">
+                        <select id="selectDocumento-${req.id}" class="form-control">
+                            ${req.documentos && req.documentos.length > 0
+                                ? req.documentos.map(doc => `<option value="${doc.archivo}">${doc.nombre}</option>`).join('')
+                                : `<option disabled selected>No hay documentos adjuntos</option>`}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <iframe id="visorDocumento-${req.id}" src="${
+                        req.documentos && req.documentos.length > 0 ? req.documentos[0].archivo : ''
+                    }" width="100%" height="600px" style="border: none"></iframe>
+                </div>
+            </div>
+        </div>
+
+    `;
+    return html;
+}
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const selectDocumento = document.getElementById("selectDocumento");
+    const visorDocumento = document.getElementById("visorDocumento");
+
+    // Mostrar el primero por defecto
+    if (selectDocumento.options.length > 0) {
+      visorDocumento.src = selectDocumento.value;
+    }
+
+    // Cambiar el PDF al seleccionar otro
+    selectDocumento.addEventListener("change", function () {
+      visorDocumento.src = this.value;
+    });
+  });
+
+
+
+
+  $(document).ready(function () {
+    $("#procedencia_sup").change(function () {
+      var procedencia_id = $(this).val();
+      var url = "{% url 'load_sub_procedencias' %}";
+      if (procedencia_id) {
+        $.ajax({
+          url: url,
+          data: { procedencia_id: procedencia_id },
+          success: function (data) {
+            $("#sub_procedencia").empty(); // Limpiar el combobox de modelos
+            $("#sub_procedencia").append(
+              '<option value="" selected >Selecciona una procedencia</option>'
+            );
+            $.each(data, function (key, value) {
+              $("#sub_procedencia").append(
+                '<option value="' +
+                  value.id +
+                  '">' +
+                  value.descrip_corta +
+                  "</option>"
+              );
+            });
+          },
+        });
+      } else {
+        $("#sub_procedencia").empty();
+        $("#sub_procedencia").append(
+          '<option value="">Selecciona una procedencia</option>'
+        );
+      }
+    });
+  });
+
+let destinatarios = [];
+
+  function llenarItemId(id) {
+    document.getElementById("itemIdx").value = id;
+    fetch(`/obtener_disposicion/obtener/${id}/`)
+      .then((response) => response.json())
+      .then((data) => {
+        document.querySelector('[name="contenido"]').value = data.disposicion;
+      });
+    destinatarios = [];
+    actualizarListaDestinatarios();
+    
+    fetch(`/nota_destinatarios/${id}/`)  // vista que devuelve JSON
+      .then(response => response.json())
+      .then(data => {
+        destinatarios = data.destinatarios || [];
+        actualizarListaDestinatarios();
+      });
+
+  }
+function actualizarListaDestinatarios() {
+  const lista = document.getElementById("listaDestinatarios");
+  lista.innerHTML = "";
+
+  destinatarios.forEach((d, index) => {
+    const li = document.createElement("li");
+    li.className = "list-group-item d-flex justify-content-between align-items-center";
+    li.textContent = `${d.procedencia_nombre} `;
+    
+    const btn = document.createElement("button");
+    btn.className = "btn btn-sm btn-danger";
+    btn.innerHTML = "<i class='fas fa-trash'></i>";
+    
+    btn.onclick = () => {
+      destinatarios.splice(index, 1);
+      actualizarListaDestinatarios();
+    };
+
+    li.appendChild(btn);
+    lista.appendChild(li);
+  });
+
+  document.getElementById("destinatariosInput").value = JSON.stringify(destinatarios);
+}
+  let destinatariosSeleccionados = [];
+
+  function agregarDestinatario() {
+    const select = document.getElementById("sub_procedencia");
+    const lista = document.getElementById("listaDestinatarios");
+    const inputHidden = document.getElementById("destinatariosInput");
+
+    const id = select.value;
+    const nombre = select.options[select.selectedIndex].text;
+
+    if (id && !destinatariosSeleccionados.includes(id)) {
+      destinatariosSeleccionados.push(id);
+
+      const li = document.createElement("li");
+      li.classList.add(
+        "list-group-item",
+        "d-flex",
+        "justify-content-between",
+        "align-items-center"
+      );
+      li.textContent = nombre;
+
+      const btnEliminar = document.createElement("button");
+      btnEliminar.classList.add("btn", "btn-danger", "btn-sm");
+      btnEliminar.innerHTML = "<i class='fas fa-trash'></i>";
+      btnEliminar.onclick = () => {
+        destinatariosSeleccionados = destinatariosSeleccionados.filter(
+          (item) => item !== id
+        );
+        li.remove();
+        inputHidden.value = destinatariosSeleccionados.join(",");
+      };
+
+      li.appendChild(btnEliminar);
+      lista.appendChild(li);
+
+      // Actualizar input hidden
+      inputHidden.value = JSON.stringify(
+        destinatariosSeleccionados.map((id) => ({ sub_procedencia: id }))
+      );
+    }
+  }
+  function registrar_disposicion(event) {
+    event.preventDefault();
+
+    let formData = new FormData(document.getElementById("formRegistroCME"));
+
+    fetch("/registrar_disposicion/", {
+      method: "POST",
+      body: formData,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "ok") {
+          alert("Registro guardado correctamente");
+          $("#modal_info_aprobado").modal("hide");
+          location.reload();
+        } else {
+          alert("Error: " + data.message);
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        alert("Ocurrió un error al guardar.");
+      });
+  }
+</script>
+
+{% endblock %}

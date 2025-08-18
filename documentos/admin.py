@@ -1,0 +1,15 @@
+from django.contrib import admin
+from .models import *
+# Register your models here.
+admin.site.register(procedencia)
+admin.site.register(usuario)
+admin.site.register(estado_preregistro)
+admin.site.register(preregistro_nota)
+admin.site.register(preregistro_nota_arch)
+admin.site.register(tp_prioridad)
+admin.site.register(procesamiento_nota)
+admin.site.register(notaxprocedencia)
+admin.site.register(estado_cumplimiento)
+admin.site.register(evidencia_cumpli_nota_arch)
+admin.site.register(PerfilUsuario)
+admin.site.register(tp_medio)
