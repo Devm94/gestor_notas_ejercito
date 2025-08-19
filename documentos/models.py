@@ -3,7 +3,7 @@ from uuid import uuid4
 from django.db import models
 
 from django.contrib.auth.models import User
-import pikepdf
+# import pikepdf
 from django.core.files.base import ContentFile
 
 MESES_ABREVIADOS_ES = {
@@ -29,6 +29,9 @@ class usuario(models.Model):
     nom_usuario = models.TextField()
     nombre = models.TextField()
     apellido = models.TextField()
+    cod_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    mision = models.TextField(null = True)
+    vision = models.TextField(null = True)
     def __str__(self):
         fila =  str(self.nom_usuario)
         return fila

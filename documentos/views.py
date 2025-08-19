@@ -15,8 +15,10 @@ def inicio(request):
     return render(request, 'index.html')
 @login_required
 def inicio_2(request):
+    log_user = usuario.objects.get(cod_user=request.user)
+    nom_completo = log_user.cod_user.first_name + " " + log_user.cod_user.last_name
     totalnotas = preregistro_nota.objects.count()
-    
+    print(nom_completo)
     totalnotas_completados = preregistro_nota.objects.filter(cod_estado_preregistro = estado_preregistro.objects.get(id = 7)).count()
     totalnotas_pendientes = preregistro_nota.objects.exclude(cod_estado_preregistro = estado_preregistro.objects.get(id = 7)).count()
     print(totalnotas)
@@ -27,6 +29,10 @@ def inicio_2(request):
         'CV': f"{totalnotas:,}",
         'ME' : f"{totalnotas_completados:,}",
         'RH' : f"{totalnotas_pendientes:,}",
+        'Mision' : log_user.mision,
+        'Vision' : log_user.vision,
+        'nom_completo' : nom_completo,
+
     }
     return render(request, 'core/base.html', context)
 @login_required
