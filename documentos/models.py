@@ -23,7 +23,10 @@ MESES_ABREVIADOS_ES = {
 
 def camb_nom_arch(instance, filename):
     return f'nota_{instance.cod_nota.id}/{filename}'
-
+def camb_nom_arch_enviadas(instance, filename):
+    return f'nota_enviadas_{instance.id}/{filename}'
+def camb_nom_arch_enviadas_resp(instance, filename):
+    return f'nota_enviadas_resp_{instance.id}/{filename}'
 class usuario(models.Model):
     id = models.AutoField(primary_key=True)
     nom_usuario = models.TextField()
@@ -151,7 +154,7 @@ class procesamiento_nota(models.Model):
     asunto = models.TextField()#fecha de recepcion de la nota.
     contenido = models.TextField()
     disposicion = models.TextField(null = True)
-    cod_usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    cod_usuario = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     tp_prioridad = models.ForeignKey(tp_prioridad, on_delete=models.CASCADE, null = True)
     tp_documentacion = models.ForeignKey(tp_documentacion, on_delete=models.CASCADE, null = True)
     fch_procesamiento = models.DateTimeField(auto_now_add=True)
@@ -204,7 +207,63 @@ class notaxprocedencia(models.Model):
             elif self.cod_nota.tp_prioridad.id == 3:
                 return "prioridad-baja"
         return ""    
-    
+
+class tp_estado_nota_env(models.Model):
+    id = models.AutoField(primary_key=True)
+    descrip_corta = models.TextField()
+    def __str__(self):
+        fila = str(self.descrip_corta) 
+        return fila
+
+
+class notas_enviadas(models.Model):
+    id = models.AutoField(primary_key=True)
+    fch_env = models.DateField(null=True)
+    no_exp = models.TextField(null=True)
+    tp_documentacion = models.ForeignKey(tp_documentacion, on_delete=models.CASCADE,default=1)#fecha de recepcion de la nota.
+    contenido = models.TextField(null=True)
+    procedencia = models.ForeignKey(procedencia, on_delete=models.CASCADE)
+    tp_medio = models.ForeignKey(tp_medio, on_delete=models.CASCADE)
+    recepcion = models.TextField(null=True)
+    completado = models.TextField(null=True)
+    tp_estado_nota_env =  models.ForeignKey(tp_estado_nota_env, on_delete=models.CASCADE)
+    cod_usuario = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    def formato_fecha(self, fecha):
+        if fecha:
+            dia = fecha.strftime('%d')
+            hora = fecha.strftime('%H%M')
+            mes_abrev = MESES_ABREVIADOS_ES[fecha.month]
+            año = fecha.strftime('%Y')[1:]  # Últimos 3 dígitos del año
+            return f"{dia}{hora}{mes_abrev}{año}"
+        return "N/A"
+
+    def fch_env_formateada(self):
+        return self.formato_fecha(self.fch_env)
+    class Meta:
+        permissions = [
+            ("registra_notas_enviadas", "Puede gestionar las notas enviadas"),
+            ]    
+        
+class nota_env_arch(models.Model):
+    id = models.AutoField(primary_key=True)
+    cod_nota_enviada = models.ForeignKey(notas_enviadas, on_delete=models.CASCADE)
+    arch = models.FileField(upload_to= camb_nom_arch_enviadas)
+    nombre_archivo = models.CharField(max_length=255, blank=True, null=True)  # Nuevo campo
+    def save(self, *args, **kwargs): 
+        if self.arch:
+            self.nombre_archivo = os.path.basename(self.arch.name) 
+            super().save(*args, **kwargs)
+
+class nota_env_resp_arch(models.Model):
+    id = models.AutoField(primary_key=True)
+    cod_nota_enviada = models.ForeignKey(notas_enviadas, on_delete=models.CASCADE)
+    arch = models.FileField(upload_to= camb_nom_arch_enviadas_resp)
+    nombre_archivo = models.CharField(max_length=255, blank=True, null=True)  # Nuevo campo
+    def save(self, *args, **kwargs): 
+        if self.arch:
+            self.nombre_archivo = os.path.basename(self.arch.name) 
+            super().save(*args, **kwargs)
+            
 class evidencia_cumpli_nota_arch(models.Model):
     id = models.AutoField(primary_key=True)
     cod_nota = models.ForeignKey(notaxprocedencia, on_delete=models.CASCADE)

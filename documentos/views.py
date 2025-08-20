@@ -8,6 +8,13 @@ from django.utils.timezone import make_aware
 from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet
+import io
+from django.http import FileResponse
 
 from django.contrib.auth import logout
 @login_required
@@ -371,7 +378,6 @@ def obtener_disposicion(request, id):
     }
     return JsonResponse(data)
 
-
 def nota_destinatarios(request, id):
     try:
         nota = procesamiento_nota.objects.get(id=id)
@@ -391,3 +397,125 @@ def nota_destinatarios(request, id):
         })
 
     return JsonResponse({"nota_id": nota.id, "destinatarios": destinatarios_data})
+
+def imprimir_nota(request, pk):
+    nota = procesamiento_nota.objects.get(cod_nota=pk)
+    return render(request, "documentacion/disposicion_print.html", {"nota": nota})
+
+@login_required
+def nota_enviada(request):
+    v_notas_enviadas = notas_enviadas.objects.all()
+    v_procedencia = procedencia.objects.filter(cod_proced_superior__isnull=True)
+    v_tp_documentacion = tp_documentacion.objects.all()
+    v_tp_medio = tp_medio.objects.all()
+    v_tp_estado_nota_env = tp_estado_nota_env.objects.all()
+    context = {
+        'v_notas_enviadas' : v_notas_enviadas,
+        'v_procedencia' : v_procedencia,
+        'v_tp_documentacion' : v_tp_documentacion,
+        'v_tp_medio' : v_tp_medio,
+        'v_tp_estado_nota_env' : v_tp_estado_nota_env,
+        }
+    if request.method == "POST":
+        r_notas_enviadas = notas_enviadas.objects.create(
+            fch_env = request.POST['fch_env'],
+            no_exp = request.POST['numExpediente'],
+            tp_documentacion = tp_documentacion.objects.get(id=request.POST['tp_documentacion']),
+            contenido = request.POST['contenido'],
+            procedencia = procedencia.objects.get(id=request.POST['sub_procedencia']),
+            tp_medio = tp_medio.objects.get(id=request.POST['tp_medio']),
+            tp_estado_nota_env = tp_estado_nota_env.objects.get(id=1,),
+            cod_usuario = User.objects.get(username=request.user),
+        ) 
+        for file in request.FILES.getlist('arch_notas_enviadas'):
+            nota_env_arch.objects.create(
+                cod_nota_enviada=r_notas_enviadas,
+                arch=file
+            )
+        return redirect('notas_enviadas')
+    else:
+        #preregistro_nota.objects.all().delete()
+        return render(request, 'documentacion/notas_enviadas.html', context)
+    
+
+@csrf_exempt
+@login_required
+def registrar_completado(request):
+    if request.method == 'POST':
+        try:
+            print("Furula")
+            item_id = request.POST.get('id_nota_enviada')
+            completado = request.POST.get('completado')
+            proc = notas_enviadas.objects.get(id=item_id)
+            proc.completado = completado
+            proc.tp_estado_nota_env = tp_estado_nota_env.objects.get(id=2)
+            
+            for file in request.FILES.getlist('fileInput1'):
+                nota_env_resp_arch.objects.create(
+                cod_nota_enviada=proc,
+                arch=file
+            )
+            proc.save()
+            return JsonResponse({'status': 'ok', 'message': 'Disposición y destinatarios registrados correctamente.'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)
+
+@login_required
+def ver_completado(request, cumplimiento_id):
+    v_notas_enviadas = notas_enviadas.objects.get(id=cumplimiento_id)
+    archivos = nota_env_resp_arch.objects.filter(cod_nota_enviada=v_notas_enviadas)
+    completado =  v_notas_enviadas.completado
+    print(archivos)
+    for a in archivos:
+        print(a.nombre_archivo)
+    data = {
+        "archivos": [
+            {"nombre": a.nombre_archivo, "url": a.arch.url}
+            for a in archivos
+        ],
+        'completado' : completado, 
+    }
+    return JsonResponse(data)
+
+@login_required
+def revisar_envio_arch(request, envio_nota_id):
+    v_nota_enviada = notas_enviadas.objects.get(id=envio_nota_id)
+    archivos = nota_env_arch.objects.filter(cod_nota_enviada=v_nota_enviada)
+
+    data = {
+        "archivos": [
+            {"nombre": a.nombre_archivo, "url": a.arch.url}
+            for a in archivos
+        ]
+    }
+    print(data)
+    return JsonResponse(data)
+
+def revisar_nota_enviada(request, id):
+    v_nota_enviada = notas_enviadas.objects.get(pk=id)
+    data = {
+        'id': id,
+        'fch_env': v_nota_enviada.fch_env,
+        'num_exp': v_nota_enviada.no_exp,
+        'tp_documentacion':str(v_nota_enviada.tp_documentacion.id),
+        'tp_medio': str(v_nota_enviada.tp_medio.id),
+        'contenido': v_nota_enviada.contenido,
+        'procedencia': str(v_nota_enviada.procedencia.id),
+        'procedencia_sup': str(v_nota_enviada.procedencia.cod_proced_superior.id),
+        }
+    return JsonResponse(data)
+
+@login_required
+def revisar_envio_resp_arch(request, envio_resp_nota_id):
+    v_nota_enviada = notas_enviadas.objects.get(id=envio_resp_nota_id)
+    archivos = nota_env_resp_arch.objects.filter(cod_nota_enviada=v_nota_enviada)
+
+    data = {
+        "archivos": [
+            {"nombre": a.nombre_archivo, "url": a.arch.url}
+            for a in archivos
+        ]
+    }
+    print(data)
+    return JsonResponse(data)

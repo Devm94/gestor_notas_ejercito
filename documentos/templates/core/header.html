@@ -71,6 +71,15 @@
           </a>
         </li>
             {% endif %}
+                        {% comment %} {% if perms.documentos.bandeja %} {% endcomment %}
+
+                  <li class="nav-item">
+          <a href="{% url 'notas_enviadas' %}" class="nav-link">
+            <i class="nav-icon fas fa-inbox"></i>
+            <p>Notas Enviadas</p>
+          </a>
+        </li>
+            {% comment %} {% endif %} {% endcomment %}
 
         </li>
                 <li class="nav-item mt-auto">

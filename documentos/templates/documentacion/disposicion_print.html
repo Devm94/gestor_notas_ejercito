@@ -1,0 +1,128 @@
+{% load humanize %} {% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Disposicion</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color:white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .form-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            border: 2px solid black;
+        }
+        .form-table td {
+            padding: 10px;
+            border: 1px solid black;
+            vertical-align: top;
+        }
+        .form-header {
+            font-weight: bold;
+            background-color: white; /* Color de fondo para impresión */
+            -webkit-print-color-adjust: exact; /* Forza el color en impresión WebKit */
+            color-adjust: exact; /* Forza el color en impresión estándar */
+            print-color-adjust: exact; /* Forza el color en impresión moderno */
+        }
+        .double-row {
+            height: 80px;
+        }
+        .content-cell {
+            height: 120px;
+        }
+        .print-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .print-button:hover {
+            background-color: #45a049;
+        }
+        @media print {
+            .no-print {
+                display: none;
+            }
+            body {
+                background-color: white;
+                padding: 0;
+            }
+            .no-print, h1, .instructions, .django-notes {
+                display: none !important;
+            .container {
+                box-shadow: none;
+                padding: 0;
+            }
+            .form-header, .content-cell {
+                 /* Asegura el color de fondo al imprimir */
+                -webkit-print-color-adjust: exact;
+                color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        .instructions {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4CAF50;
+        }
+        .django-notes {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f0f7ff;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
+        }
+
+
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="no-print">Formulario de Registro</h1>
+        
+        <button class="print-button no-print" onclick="window.print()">Imprimir Formulario</button>
+        
+        <table class="form-table">
+            <tr>
+                <td class="form-header" style="width: 30%">FECHA:230908JUN025</td>
+                <td class="form-header" style="width: 40%">REGISTRO: 8</td>
+                <td class="form-header" style="width: 30%">CLASIFICACION:Urgente</td>
+            </tr>
+            <tr>
+                <td style="background-color: #4CAF50;!important" colspan="3" class="form-header">PROCEDENCIA:E-6</td>
+            </tr>
+            <tr>
+                <td colspan="3" class="form-header">CONTENIDO: <br></td>
+            </tr>
+            <tr>
+                <td colspan="3" class="form-header content-cell">DISPOSICION</td>
+            </tr>
+            <tr>
+                <td colspan="2" class="form-header">FECHA LIMITE:190908AGO025</td>
+                <td colspan="2" class="form-header">FIRMA:</td>
+            </tr>
+        </table>
+        
+        <p class="no-print">Este formulario está listo para imprimir. Haz clic en el botón "Imprimir Formulario" para generar una copia física.</p>
+    </div>
+</body>
+</html>

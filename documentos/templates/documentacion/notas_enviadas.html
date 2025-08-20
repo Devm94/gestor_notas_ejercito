@@ -1,0 +1,616 @@
+{% extends '../core/base.html' %} {% load static %} {% block 'contenido' %}
+<link rel="stylesheet" href="{% static 'lib/adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}"/>
+<link rel="stylesheet" href="{% static 'lib/adminlte/plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}"/>
+<link rel="stylesheet" href="{% static 'lib/adminlte/plugins/datatables-buttons/css/buttons.bootstrap4.min.css' %}"/>
+<style>
+  .dataTables_filter {
+    float: right;
+  }
+  .dt-buttons {
+    float: left;
+  }
+  .btn_add_req {
+    float: right;
+  }
+  .small-table {
+    font-size: 0.875em; /* Reducir el tamaño de la fuente */
+  }
+  .compact-table td,
+  .compact-table th {
+    padding: 0.5rem; /* Reducir el padding */
+  }
+</style>
+<section class="content-header"></section>
+<section class="content">
+  {% csrf_token %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Registro de Notas Enviadas</h3>
+            <div class="card-tools"></div>
+          </div>
+          <div class="card-body">
+            <table
+              id="example1"
+              class="table table-bordered table-striped table-sm compact-table"
+              style="font-size: 12px"
+            >
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Fecha</th>
+                  <th>Remitente</th>
+                  <th>Exp.</th>
+                  <th>Estado</th>
+                  <th>Responsable</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for l_notas_enviadas in v_notas_enviadas %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>{{ l_notas_enviadas.fch_env_formateada }}</td>
+                  <td>{{l_notas_enviadas.procedencia }}</td>
+                  <td>{{l_notas_enviadas.no_exp}}</td>
+                  <td>{{l_notas_enviadas.tp_estado_nota_env}}</td>
+                  <td>{{l_notas_enviadas.cod_usuario}}</td>
+                  <td>
+                    <div class="dropdown">
+                      <button  class="btn btn-outline-primary btn-sm btn-block dropdown-toggle" type="button" id="accionesCentro{{ l_notas_enviadas.id }}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Acciones
+                      </button>
+                      <div class="dropdown-menu" aria-labelledby="accionesCentro{{ l_notas_enviadas.id }}">
+                        <a class="dropdown-item text-info" href="#" data-toggle="modal" data-target="#modal_agregar" onclick="revisar({{l_notas_enviadas.id }})">
+                          Revisar
+                        </a>
+                        <a class="dropdown-item text-info" href="#" data-toggle="modal" data-target="#modal_completado" onclick="completar({{l_notas_enviadas.id }})">
+                          Completar
+                        </a>
+                        <a href="{% url 'eliminar_nota' l_notas_enviadas.id %}" class="dropdown-item text-danger" onclick="return confirm('¿Seguro que quieres eliminar este registro?');"> 
+                          Eliminar
+                        </a>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <br />
+            <div class="container">
+              <div class="btn_add_req">
+                <a href="#" class="btn btn-info" role="button" data-bs-toggle="modal" data-bs-target="#modal_agregar" id="btnAgregar" >
+                  Agregar
+                  <i class="bi bi-plus-circle"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<div id="modal_agregar" class="modal fade" tabindex="-1" aria-labelledby="modal_agregarLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modal_agregarLabel">Registro de Notas Enviadas</h5>
+        <button type="button" class="btn btn-close btn-light" data-dismiss="modal" aria-label="Cerrar">
+          Cerrar
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="form_registrar" method="POST"  enctype="multipart/form-data">
+          {% csrf_token %}
+          <input type="hidden" id="itemId" name="itemId" />
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="numExpediente" class="form-label">Num. de Exp.</label>
+              <input
+                type="text"
+                class="form-control"
+                id="numExpediente"
+                name="numExpediente"
+                required
+              />
+            </div>
+            <div class="col-md-6">
+              <label for="fch_env" class="form-label">Fecha de Envio</label>
+              <input
+                type="date"
+                class="form-control"
+                id="fch_env"
+                name="fch_env"
+                required
+              />
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="tp_medio" class="form-label">Medio</label>
+              <select class="form-control" id="tp_medio" name="tp_medio" required>
+                <option value="">Seleccione...</option>
+                {% for medio in v_tp_medio %}
+                <option value="{{ medio.id }}">
+                  {{ medio.descrip_corta }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="tp_documentacion" class="form-label">Documentación</label>
+              <select class="form-control" id="tp_documentacion" name="tp_documentacion" required>
+                <option value="">Seleccione...</option>
+                {% for tp_documentacion in v_tp_documentacion %}
+                <option value="{{ tp_documentacion.id }}">
+                  {{ tp_documentacion.descrip_corta }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="procedencia_sup" class="form-label">Procedencia</label>
+              <select class="form-control" id="procedencia_sup" name="procedencia_sup" required>
+                <option value="" selected> Seleccione...</option>
+                {% for procedencia in v_procedencia %}
+                <option value="{{ procedencia.id }}">
+                  {{ procedencia.descrip_corta }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="sub_procedencia" class="form-label">Remitente</label>
+              <select class="form-control" id="sub_procedencia" name="sub_procedencia" required>
+                <option value="">Seleccione...</option>
+              </select>
+            </div> 
+          </div>
+          <div class="row mt-3">
+            <div class="col-md-12">
+              <label for="contenido" class="form-label">Contenido</label>
+              <textarea class="form-control" id="contenido" name="contenido" rows="3" required></textarea>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Adjuntar Documentos</label>
+            <div id="dropzone" class="border border-primary p-3 text-center" ondragover="event.preventDefault();">
+              <p> Arrastra y suelta archivos aquí o
+                <label for="fileInput" class="text-primary" style="cursor: pointer">selecciona</label>
+              </p>
+              <input type="file" id="fileInput" name="arch_notas_enviadas" multiple accept=".pdf,image/*" class="form-control d-none"/>
+              <ul id="fileList" class="list-unstyled mt-2"></ul>
+            </div>
+          </div>
+          <div id="Block">
+            <label for="selectDocument1" class="form-label">Seleccione un documento:</label>
+            <select id="selectDocument1" class="form-select"></select>
+            <div class="mt-3">
+              <iframe id="visorDocument1" src="" width="100%" height="600px" style="border: none"></iframe>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary" form="form_registrar"  >Registrar</button>
+            <input type="hidden" name="detalles" id="detalles_hidden">
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div
+  id="modal_completado"
+  class="modal fade"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="modal_completadoLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Completado</h5>
+        <button type="button" class="btn btn-close btn-light" data-dismiss="modal" aria-label="Cerrar">
+          Cerrar
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="form_completado" method="POST" enctype="multipart/form-data" onsubmit="registrar_completado(event)">
+          <input type="hidden" id="id_nota_enviada" name="id_nota_enviada" />
+        {% csrf_token %}
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <label for="contenido" class="form-label">Completado</label>
+              <textarea class="form-control" id="completado" name="completado" rows="3" required ></textarea>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Adjuntar Documentos</label>
+            <div id="dropzone1" class="border border-primary p-3 text-center" ondragover="event.preventDefault();">
+              <p> Arrastra y suelta archivos aquí o
+                <label for="fileInput1" class="text-primary" style="cursor: pointer" >selecciona</label >
+              </p>
+              <input type="file" id="fileInput1" name="fileInput1" multiple  accept=".pdf,image/*" class="form-control d-none"/>
+              <ul id="fileList1" class="list-unstyled mt-2"></ul>
+            </div>
+          </div>
+          <div >
+            <label for="selectDocument2" class="form-label">Seleccione un documento:</label>
+            <select id="selectDocument2" class="form-select"></select>
+            <div class="mt-3">
+              <iframe id="visorDocument2" src="" width="100%" height="600px" style="border: none"></iframe>
+            </div>
+          </div>
+          <div class="text-center">
+            <button type="submit" class="btn btn-primary btn-sm">
+              <i class="fas fa-save"></i> Guardar
+            </button>
+          </div>
+
+        </form>
+      </div>
+      <div class="modal-footer">
+        <small class="text-muted"
+          >Complete todos los campos requeridos antes de guardar.</small
+        >
+      </div>
+    </div>
+  </div>
+</div>
+<script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-buttons/js/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-buttons/js/buttons.bootstrap4.min.js' %}"></script>
+
+<script>
+  jQuery(document).ready(function ($) {
+    $("#example1").DataTable({
+      language: {
+        decimal: "",
+        emptyTable: "No hay datos disponibles en la tabla",
+        info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
+        infoEmpty: "Mostrando 0 a 0 de 0 entradas",
+        infoFiltered: "(filtrado de _MAX_ entradas totales)",
+        infoPostFix: "",
+        thousands: ",",
+        lengthMenu: "Mostrar _MENU_ entradas",
+        loadingRecords: "Cargando...",
+        processing: "Procesando...",
+        search: "Buscar:",
+        zeroRecords: "No se encontraron registros coincidentes",
+        paginate: {
+          first: "Primero",
+          last: "Último",
+          next: "Siguiente",
+          previous: "Anterior",
+        },
+        aria: {
+          sortAscending: ": activar para ordenar la columna ascendente",
+          sortDescending: ": activar para ordenar la columna descendente",
+        },
+      },
+    });
+  });
+
+  $(document).ready(function () {
+    $("#procedencia_sup").change(function () {
+      var procedencia_id = $(this).val();
+      var url = "{% url 'load_sub_procedencias' %}";
+      if (procedencia_id) {
+        $.ajax({
+          url: url,
+          data: { procedencia_id: procedencia_id },
+          success: function (data) {
+            $("#sub_procedencia").empty(); // Limpiar el combobox de modelos
+            $("#sub_procedencia").append(
+              '<option value="" selected >Selecciona una procedencia</option>'
+            );
+            $.each(data, function (key, value) {
+              $("#sub_procedencia").append(
+                '<option value="' +
+                  value.id +
+                  '">' +
+                  value.descrip_corta +
+                  "</option>"
+              );
+            });
+          },
+        });
+      } else {
+        $("#sub_procedencia").empty();
+        $("#sub_procedencia").append(
+          '<option value="">Selecciona una procedencia</option>'
+        );
+      }
+    });
+  });
+
+
+  function verArchivo(select) {
+    var url = select.value;
+    if (url) {
+      window.open(url, "_blank");
+    }
+  }
+
+  function revisar(id) {
+    Block.style.display = "block"; 
+    fetch(`/revisar_envio_arch/${id}/`) // Vista Django que devuelve JSON con archivos
+      .then((response) => response.json())
+      .then((data) => {
+        const select = document.getElementById("selectDocument1");
+        const visor = document.getElementById("visorDocument1");
+        select.innerHTML = "";
+        data.archivos.forEach((doc) => {
+          let option = document.createElement("option");
+          option.value = doc.url;
+          option.textContent = doc.nombre;
+          select.appendChild(option);
+          alert(doc.nombre);
+        });
+        if (data.archivos.length > 0) {
+          visor.src = data.archivos[0].url;
+        }
+      });
+
+    fetch(`/revisar_nota_enviada/${id}/`)
+    
+      .then((response) => response.json())
+      .then((data) => {
+        document.querySelector('[name="itemId"]').value = data.id;
+        document.querySelector('[name="fch_env"]').value = data.fch_env;
+        document.querySelector('[name="numExpediente"]').value = data.num_exp;
+        document.querySelector('[name="tp_documentacion"]').value = data.tp_documentacion;
+        document.querySelector('[name="tp_medio"]').value = data.tp_medio;
+        document.querySelector('[name="contenido"]').value = data.contenido;
+        document.querySelector('[name="procedencia_sup"]').value = data.procedencia_sup;
+        var procedencia = data.procedencia;
+        var procedencia_id = data.procedencia_sup;
+        var url = "{% url 'load_sub_procedencias' %}";
+        if (procedencia_id) {
+          $.ajax({
+            url: url,
+            data: { procedencia_id: procedencia_id },
+            success: function (data) {
+              $("#sub_procedencia").empty(); // Limpiar el combobox de modelos
+              $("#sub_procedencia").append(
+                '<option value="" selected >Selecciona una procedencia</option>'
+              );
+              $.each(data, function (key, value) {
+                $("#sub_procedencia").append(
+                  '<option value="' +
+                    value.id +
+                    '">' +
+                    value.descrip_corta +
+                    "</option>"
+                );
+              });
+              document.querySelector('[name="sub_procedencia"]').value =procedencia;
+            },
+          });
+        } else {
+          $("#sub_procedencia").empty();
+          $("#sub_procedencia").append(
+            '<option value="">Selecciona una procedencia</option>'
+          );
+        }
+    });
+  }
+
+  function registrar_completado(event) {
+    event.preventDefault();
+    let formData = new FormData(document.getElementById("form_completado"));
+    fetch("/registrar_completado/", {
+      method: "POST",
+      body: formData,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "ok") {
+          alert("Registro guardado correctamente");
+          $("#modal_completado").modal("hide");
+          location.reload();
+        } else {
+          alert("Error: " + data.message);
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        alert("Ocurrió un error al guardar.");
+      });
+  }
+
+  function completar(id) {
+    document.getElementById("id_nota_enviada").value = id;
+      fetch(`/revisar_envio_resp_arch/${id}/`) // Vista Django que devuelve JSON con archivos
+      .then((response) => response.json())
+      .then((data) => {
+        const select = document.getElementById("selectDocument2");
+        const visor = document.getElementById("visorDocument2");
+        alert("a");
+        select.innerHTML = "";
+        data.archivos.forEach((doc) => {
+          let option = document.createElement("option");
+          option.value = doc.url;
+          option.textContent = doc.nombre;
+          select.appendChild(option);
+          alert(doc.nombre);
+        });
+        if (data.archivos.length > 0) {
+          visor.src = data.archivos[0].url;
+        }
+      });
+
+    fetch(`/ver_completado/${id}/`)
+      .then((response) => response.json())
+      .then((data) => {
+        document.querySelector('[name="completado"]').value = data.completado || "";
+      });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    let fileInput = document.getElementById("fileInput1");
+    let dropzone = document.getElementById("dropzone1");
+    let fileList = document.getElementById("fileList1");
+    let selectedFiles = new DataTransfer(); // 📌 Para manejar archivos correctamente
+
+    // 📌 Detectar archivos desde el input
+    fileInput.addEventListener("change", function (event) {
+      handleFiles(event.target.files);
+    });
+    // 📌 Manejar archivos cuando se arrastran al área
+    dropzone.addEventListener("drop", function (event) {
+      event.preventDefault();
+      handleFiles(event.dataTransfer.files);
+    });
+    dropzone.addEventListener("dragover", function (event) {
+      event.preventDefault();
+    });
+    // 📌 Función para manejar los archivos seleccionados
+    function handleFiles(files) {
+      for (let file of files) {
+        if (!fileExists(file)) {
+          selectedFiles.items.add(file); // Agrega el archivo a la lista de DataTransfer
+          let listItem = document.createElement("li");
+          listItem.className =
+            "d-flex justify-content-between align-items-center p-2 border rounded mt-1";
+          listItem.innerHTML = `
+                  ${file.name}
+                  <button type="button" class="btn btn-danger btn-sm ms-2" onclick="removeFile('${file.name}')">✖</button>`;
+          fileList.appendChild(listItem);
+        }
+      }
+      fileInput.files = selectedFiles.files; // Actualiza los archivos en el input
+    }
+    function fileExists(file) {
+      for (let i = 0; i < selectedFiles.files.length; i++) {
+        if (selectedFiles.files[i].name === file.name) {
+          return true;
+        }
+      }
+      return false;
+    }
+    window.removeFile = function (fileName) {
+      for (let i = 0; i < selectedFiles.items.length; i++) {
+        if (selectedFiles.items[i].getAsFile().name === fileName) {
+          selectedFiles.items.remove(i); // Elimina el archivo de la lista
+          break;
+        }
+      }
+      fileInput.files = selectedFiles.files; // Actualiza los archivos en el input
+      updateFileList();
+    };
+    function updateFileList() {
+      fileList.innerHTML = "";
+      for (let i = 0; i < selectedFiles.files.length; i++) {
+        let file = selectedFiles.files[i];
+
+        let listItem = document.createElement("li");
+        listItem.className =
+          "d-flex justify-content-between align-items-center p-2 border rounded mt-1";
+
+        listItem.innerHTML = `
+              ${file.name}
+              <button type="button" class="btn btn-danger btn-sm ms-2" onclick="removeFile('${file.name}')">✖</button>`;
+        fileList.appendChild(listItem);
+      }
+    }
+  });
+  document.addEventListener("DOMContentLoaded", function () {
+    let fileInput = document.getElementById("fileInput");
+    let dropzone = document.getElementById("dropzone");
+    let fileList = document.getElementById("fileList");
+    let selectedFiles = new DataTransfer(); // 📌 Para manejar archivos correctamente
+
+    // 📌 Detectar archivos desde el input
+    fileInput.addEventListener("change", function (event) {
+      handleFiles(event.target.files);
+    });
+    // 📌 Manejar archivos cuando se arrastran al área
+    dropzone.addEventListener("drop", function (event) {
+      event.preventDefault();
+      handleFiles(event.dataTransfer.files);
+    });
+    dropzone.addEventListener("dragover", function (event) {
+      event.preventDefault();
+    });
+    // 📌 Función para manejar los archivos seleccionados
+    function handleFiles(files) {
+      for (let file of files) {
+        if (!fileExists(file)) {
+          selectedFiles.items.add(file); // Agrega el archivo a la lista de DataTransfer
+          let listItem = document.createElement("li");
+          listItem.className =
+            "d-flex justify-content-between align-items-center p-2 border rounded mt-1";
+          listItem.innerHTML = `
+                  ${file.name}
+                  <button type="button" class="btn btn-danger btn-sm ms-2" onclick="removeFile('${file.name}')">✖</button>`;
+          fileList.appendChild(listItem);
+        }
+      }
+      fileInput.files = selectedFiles.files; // Actualiza los archivos en el input
+    }
+    function fileExists(file) {
+      for (let i = 0; i < selectedFiles.files.length; i++) {
+        if (selectedFiles.files[i].name === file.name) {
+          return true;
+        }
+      }
+      return false;
+    }
+    window.removeFile = function (fileName) {
+      for (let i = 0; i < selectedFiles.items.length; i++) {
+        if (selectedFiles.items[i].getAsFile().name === fileName) {
+          selectedFiles.items.remove(i); // Elimina el archivo de la lista
+          break;
+        }
+      }
+      fileInput.files = selectedFiles.files; // Actualiza los archivos en el input
+      updateFileList();
+    };
+    function updateFileList() {
+      fileList.innerHTML = "";
+      for (let i = 0; i < selectedFiles.files.length; i++) {
+        let file = selectedFiles.files[i];
+
+        let listItem = document.createElement("li");
+        listItem.className =
+          "d-flex justify-content-between align-items-center p-2 border rounded mt-1";
+
+        listItem.innerHTML = `
+              ${file.name}
+              <button type="button" class="btn btn-danger btn-sm ms-2" onclick="removeFile('${file.name}')">✖</button>`;
+        fileList.appendChild(listItem);
+      }
+    }
+  });
+  document.addEventListener("DOMContentLoaded", function () {
+    const btnAgregar = document.getElementById("btnAgregar");
+    const documentBlock = document.getElementById("Block");
+    const btnRevisar = document.getElementById("btnRevisar");
+    btnAgregar.addEventListener("click", function () {
+      Block.style.display = "none"; 
+      document.querySelector('[name="itemId"]').value = "";
+      document.querySelector('[name="fch_env"]').value = "";
+      document.querySelector('[name="numExpediente"]').value = "";
+      document.querySelector('[name="tp_documentacion"]').value = "";
+      document.querySelector('[name="tp_medio"]').value = "";
+      document.querySelector('[name="contenido"]').value = "";
+      document.querySelector('[name="procedencia_sup"]').value = "";
+      document.querySelector('[name="sub_procedencia"]').value = "";
+    });
+  });
+</script>
+{% endblock %}
