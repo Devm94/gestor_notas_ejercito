@@ -45,6 +45,7 @@ class procedencia(models.Model):
     descrip_corta = models.TextField()    
     descrip_larga = models.TextField()    
     cod_proced_superior = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='subcategorias')
+    color = models.TextField(null = True)
     def __str__(self):
         fila =  str(self.descrip_corta)
         return fila
@@ -184,6 +185,7 @@ class procesamiento_nota(models.Model):
                 return "prioridad-baja"
         return ""    
     
+    
 class estado_cumplimiento(models.Model):
     id = models.AutoField(primary_key=True)
     descrip_corta = models.TextField()
@@ -234,11 +236,17 @@ class notas_enviadas(models.Model):
             hora = fecha.strftime('%H%M')
             mes_abrev = MESES_ABREVIADOS_ES[fecha.month]
             año = fecha.strftime('%Y')[1:]  # Últimos 3 dígitos del año
-            return f"{dia}{hora}{mes_abrev}{año}"
+            return f"{dia}{mes_abrev}{año}"
         return "N/A"
 
     def fch_env_formateada(self):
         return self.formato_fecha(self.fch_env)
+    
+    def clase_prioridad(self):
+        if self.tp_estado_nota_env.descrip_corta != "Completada":
+            if self.tp_estado_nota_env.id == 1:
+                return "prioridad-alta"
+        return ""   
     class Meta:
         permissions = [
             ("registra_notas_enviadas", "Puede gestionar las notas enviadas"),
@@ -297,3 +305,13 @@ class evidencia_cumpli_nota_arch(models.Model):
 
     #         except Exception as e:
     #             print(f"⚠️ Error al comprimir PDF: {e}")
+    
+class nota_disp_arch(models.Model):
+    id = models.AutoField(primary_key=True)
+    cod_nota = models.ForeignKey(procesamiento_nota, on_delete=models.CASCADE)
+    arch = models.FileField(upload_to= camb_nom_arch_enviadas)
+    nombre_archivo = models.CharField(max_length=255, blank=True, null=True)  # Nuevo campo
+    def save(self, *args, **kwargs): 
+        if self.arch:
+            self.nombre_archivo = os.path.basename(self.arch.name) 
+            super().save(*args, **kwargs)

@@ -11,24 +11,7 @@
   rel="stylesheet"
   href="{% static 'lib/adminlte/plugins/datatables-buttons/css/buttons.bootstrap4.min.css' %}"
 />
-<style>
-  .dataTables_filter {
-    float: right;
-  }
-  .dt-buttons {
-    float: left;
-  }
-  .btn_add_req {
-    float: right;
-  }
-  .small-table {
-    font-size: 0.875em; /* Reducir el tamaño de la fuente */
-  }
-  .compact-table td,
-  .compact-table th {
-    padding: 0.5rem; /* Reducir el padding */
-  }
-</style>
+
 <section class="content-header"></section>
 <section class="content">
   {% csrf_token %}
@@ -42,11 +25,7 @@
             </div>
           </div>
           <div class="card-body">
-            <table
-              id="example1"
-              class="table table-bordered table-striped table-sm compact-table"
-              style="font-size: 12px"
-            >
+            <table id="example1" class="table table-bordered table-striped table-sm compact-table" style="font-size: 12px">
               <thead>
                 <tr>
                   <th>No.</th>
@@ -83,26 +62,7 @@
                         class="dropdown-menu"
                         aria-labelledby="accionesCentro{{ notas_procesadas.id }}"
                       >
-                        <!-- <a
-                          class="dropdown-item text-success"
-                          href="#"
-                          data-toggle="modal"
-                          data-target="#modal_info_procesado"
-                          onclick="info_procesado({{notas_procesadas.id }})"
-                        >
-                          Expediente
-                        </a> -->
-{% comment %}                         {% if ls_preregistro_notas.cod_estado_preregistro.id == 1  %}
-                        <a
-                          class="dropdown-item text-success"
-                          href="#"
-                          data-toggle="modal"
-                          data-target="#modal_info_aprobado"
-                          onclick="llenarItemId({{ ls_preregistro_notas.id }})"
-                        >
-                          Corregir
-                        </a>
-                        {% endif %}  {% endcomment %}
+                      
                         {% if ls_preregistro_notas.cod_estado_preregistro.id == 1  %}
                         <a
                           class="dropdown-item text-info"
@@ -113,8 +73,9 @@
                         >
                           Procesar
                         </a>
+
                         {% endif %} 
-                        {% if ls_preregistro_notas.cod_estado_preregistro.id > 2  %}
+                        {% if ls_preregistro_notas.cod_estado_preregistro.id >= 2  %}
                                                 <a
                           class="dropdown-item text-info"
                           href="#"
@@ -124,8 +85,14 @@
                         >
                           Revisar
                         </a>
-                        {% endif %}
-                        <a class="dropdown-item text-info" href="{% url 'imprimir_nota' ls_preregistro_notas.id %}" target="_blank"> Imprimir </a>
+                        <a class="dropdown-item text-info" href="#" data-toggle="modal" data-target="#modal_expediente" onclick="ver_cumplimiento({{ls_preregistro_notas.id }})">
+                          Cumplimiento
+                        </a>
+                        <a class="dropdown-item text-success" href="#" data-toggle="modal" data-target="#modal_info_aprobado" onclick="llenarItemId({{ ls_preregistro_notas.id  }})" >
+                          Disposición
+                        </a>
+                        <a class="dropdown-item text-info" href="{% url 'imprimir_nota_proc' ls_preregistro_notas.id %}" target="_blank"> Imprimir </a>                      
+                        {% endif %} 
                       </div>
                     </div>
                   </td>
@@ -138,6 +105,7 @@
       </div>
     </div>
   </div>
+
 </section>
 
 <div
@@ -189,7 +157,7 @@
             </div>
           </div>
           <div class="row mb-3">
-            <div class="col-md-12">
+            <div class="col-md-6">
               <label for="prioridad" class="form-label">Prioridad</label>
               <select
                 class="form-control"
@@ -205,17 +173,16 @@
                 {% endfor %}
               </select>
             </div>
-          </div>
-          <div class="row mb-3">
-            <div class="col-md-12">
-              <label for="asunto" class="form-label">Asunto</label>
-              <input
-                type="text"
-                class="form-control"
-                id="asunto"
-                name="asunto"
-                required
-              />
+            <div class="col-md-6">
+              <label for="tp_documentacion" class="form-label">Documentación</label>
+              <select class="form-control" id="tp_documentacion" name="tp_documentacion" required>
+                <option value="">Seleccione...</option>
+                {% for tp_documentacion in v_tp_documentacion %}
+                <option value="{{ tp_documentacion.id }}">
+                  {{ tp_documentacion.descrip_corta }}
+                </option>
+                {% endfor %}
+              </select>
             </div>
           </div>
           <div class="row mb-3">
@@ -260,16 +227,10 @@
   aria-hidden="true"
 >
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
-    a
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Revisión de Documentación Procesada</h5>
-        <button
-          type="button"
-          class="btn btn-close btn-light"
-          data-dismiss="modal"
-          aria-label="Cerrar"
-        >
+        <button type="button" class="btn btn-close btn-light" data-dismiss="modal" aria-label="Cerrar">
           Cerrar
         </button>
       </div>
@@ -280,60 +241,28 @@
         <div class="row mb-3">
           <div class="col-md-6">
             <label for="fechaNota" class="form-label">Fecha de Nota</label>
-            <input
-              type="text"
-              class="form-control"
-              id="r_fch_exp"
-              name="r_fch_exp"
-              readonly
-            />
+            <input type="text" class="form-control" id="r_fch_exp" name="r_fch_exp" readonly/>
           </div>
           <div class="col-md-6">
             <label for="fechaLimite" class="form-label">Fecha Límite</label>
-            <input
-              type="text"
-              class="form-control"
-              id="r_fch_limite"
-              name="r_fch_limite"
-              readonly
-            />
+            <input type="text" class="form-control" id="r_fch_limite" name="r_fch_limite" readonly />
           </div>
         </div>
         <div class="row mb-3">
           <div class="col-md-12">
             <label for="prioridad" class="form-label">Prioridad</label>
-            <input
-              type="text"
-              class="form-control"
-              id="r_tp_prioridad"
-              name="r_tp_prioridad"
-              readonly
-            />
+            <input type="text" class="form-control" id="r_tp_prioridad" name="r_tp_prioridad" readonly/>
           </div>
         </div>
         <div class="row mb-3">
-          <div class="col-md-12">
+          <div class="col-md-6">
             <label for="asunto" class="form-label">Procedencia</label>
-            <input
-              type="text"
-              class="form-control"
-              id="r_procedencia"
-              name="r_procedencia"
-              readonly
-            />
+            <input type="text" class="form-control" id="r_procedencia" name="r_procedencia"readonly/>
           </div>
-        </div>
-        <div class="row mb-3">
-          <div class="col-md-12">
-            <label for="asunto" class="form-label">Asunto</label>
-            <input
-              type="text"
-              class="form-control"
-              id="r_asunto"
-              name="r_asunto"
-              readonly
-            />
-          </div>
+          <div class="col-md-6">
+              <label for="tp_documentacion" class="form-label">Documentación</label>
+              <input type="text" class="form-control"  id="r_tp_documentacion" name="r_tp_documentacion" readonly/>
+            </div>
         </div>
         <div class="row mb-3">
           <div class="col-md-12">
@@ -347,25 +276,161 @@
             ></textarea>
           </div>
         </div>
-    
-                    <label for="r_selectDocumento" class="form-label"
-            >Seleccione un documento:</label
-          >
+        <label for="r_selectDocumento" class="form-label">Seleccione un documento:</label>
           <select id="r_selectDocumento" class="form-select"></select>
-            <iframe
-              id="r_visorDocumento"
-              src=""
-              width="100%"
-              height="600px"
-              style="border: none"
-            ></iframe>
+            <iframe id="r_visorDocumento" src="" width="100%" height="600px" style="border: none"></iframe>
         </div>
       </form>
     </div>
   </div>
 </div>
+<div
+  id="modal_expediente"
+  class="modal fade"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="modal_ver_expedienteLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cumplimiento del Requerimiento</h5>
+        <button
+          type="button"
+          class="btn btn-close btn-light"
+          data-dismiss="modal"
+          aria-label="Cerrar"
+        >
+          Cerrar
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="listaRequerimientos"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div
+  id="modal_info_aprobado"
+  class="modal fade"
+  tabindex="-1"
+  role="dialog"
+  aria-labelledby="modal_info_aprobadoLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header ">
+        <h5 class="modal-title">Enviar Disposición</h5>
+        <button
+          type="button"
+          class="btn btn-close btn-light"
+          data-dismiss="modal"
+          aria-label="Cerrar"
+        >
+          Cerrar
+        </button>
+      </div>
+      <div class="modal-body">
+        <form
+          id="formRegistroCME"
+          method="POST"
+          enctype="multipart/form-data"
+          onsubmit="registrar_disposicion(event)"
+        >
+          <input type="hidden" id="itemIdx" name="itemIdx" />
+
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <label for="contenido" class="form-label">Disposición</label>
+              <textarea class="form-control" id="disposicion" name="disposicion" rows="3" required ></textarea>
+            </div>
+          </div>
+          <div id="div_adj_disp" class="mb-3">
+            <label class="form-label">Adjuntar Disposicion</label>
+            <div id="dropzone" class="border border-primary p-3 text-center" ondragover="event.preventDefault();">
+              <p> Arrastra y suelta archivos aquí o
+                <label for="fileInput" class="text-primary" style="cursor: pointer">selecciona</label>
+              </p>
+              <input type="file" id="fileInput" name="arch_notas_enviadas" multiple accept=".pdf,image/*" class="form-control d-none"/>
+              <ul id="fileList" class="list-unstyled mt-2"></ul>
+            </div>
+          </div>
+          <div id="div_visor_dispo" >
+            <label for="selectDocument2" class="form-label">Seleccione un documento:</label>
+            <select id="selectDocument2" class="form-select"></select>
+            <div class="mt-3">
+              <iframe id="visorDocument2" src="" width="100%" height="600px" style="border: none"></iframe>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-5">
+              <label for="disp_procedencia_sup" class="form-label"
+                >Procedencia</label
+              >
+              <select
+                class="form-control"
+                id="disp_procedencia_sup"
+                name="disp_procedencia_sup"
+                
+              >
+                <option value="" selected>Seleccione...</option>
+                {% for procedencia in ls_procedencia %}
+                <option value="{{ procedencia.id }}">
+                  {{ procedencia.descrip_corta }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-5">
+              <label for="sub_procedencia" class="form-label">Remitente</label>
+              <select
+                class="form-control"
+                id="disp_sub_procedencia"
+                name="disp_sub_procedencia"
+                
+              >
+                <option value="">Seleccione...</option>
+              </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+              <button
+                type="button"
+                class="btn btn-success btn-block"
+                onclick="agregarDestinatario()"
+              >
+                Agregar
+              </button>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <ul id="listaDestinatarios" class="list-group"></ul>
+            </div>
+          </div>
+          <input type="hidden" name="destinatarios" id="destinatariosInput" />
+          <div class="text-center">
+            <button type="submit" class="btn btn-primary btn-sm">
+              <i class="fas fa-save"></i> Guardar Registro
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <small class="text-muted"
+          >Complete todos los campos requeridos antes de guardar.</small
+        >
+      </div>
+    </div>
+  </div>
+</div>
 <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'js/tabla.js' %}"></script>
+<script src="{% static 'js/func_procedencia.js' %}"></script>
+<script src="{% static 'js/func_notas_enviadas.js' %}"></script>
 <script src="{% static 'lib/adminlte/plugins/datatables/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'lib/adminlte/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
 <script src="{% static 'lib/adminlte/plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
@@ -373,34 +438,12 @@
 <script src="{% static 'lib/adminlte/plugins/datatables-buttons/js/dataTables.buttons.min.js' %}"></script>
 <script src="{% static 'lib/adminlte/plugins/datatables-buttons/js/buttons.bootstrap4.min.js' %}"></script>
 <script>
-  jQuery(document).ready(function ($) {
-    $("#example1").DataTable({
-      language: {
-        decimal: "",
-        emptyTable: "No hay datos disponibles en la tabla",
-        info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-        infoEmpty: "Mostrando 0 a 0 de 0 entradas",
-        infoFiltered: "(filtrado de _MAX_ entradas totales)",
-        infoPostFix: "",
-        thousands: ",",
-        lengthMenu: "Mostrar _MENU_ entradas",
-        loadingRecords: "Cargando...",
-        processing: "Procesando...",
-        search: "Buscar:",
-        zeroRecords: "No se encontraron registros coincidentes",
-        paginate: {
-          first: "Primero",
-          last: "Último",
-          next: "Siguiente",
-          previous: "Anterior",
-        },
-        aria: {
-          sortAscending: ": activar para ordenar la columna ascendente",
-          sortDescending: ": activar para ordenar la columna descendente",
-        },
-      },
-    });
-  });
+  const div_adj_disp = document.getElementById("div_adj_disp");
+  const div_vis_disp = document.getElementById("div_visor_dispo");
+    var fileInput_Completar = "fileInput";
+  var dropzone_Completar = "dropzone";
+  var fileList_Completar = "fileList";
+  var loadSubProcedenciasUrl = "{% url 'load_sub_procedencias' %}";
   function verArchivo(select) {
     var url = select.value;
     if (url) {
@@ -442,7 +485,7 @@
     });
   });
 
-    function revisar(id) {
+  function revisar(id) {
     fetch(`/expediente_json_procesamiento/${id}/`) // Vista Django que devuelve JSON con archivos
       .then((response) => response.json())
       .then((data) => {
@@ -468,14 +511,270 @@
     fetch(`/revisar_procesamiento/${id}/`)
       .then((response) => response.json())
       .then((data) => {
-                document.getElementById("itemId").value = data.id;
+        document.getElementById("itemId").value = data.id;
         document.querySelector('[name="r_fch_exp"]').value = data.fch_exp;
         document.querySelector('[name="r_fch_limite"]').value = data.fch_limite;
-        document.querySelector('[name="r_tp_prioridad"]').value =
-          data.tp_prioridad;
-        document.querySelector('[name="r_asunto"]').value = data.asunto;
+        document.querySelector('[name="r_tp_prioridad"]').value =data.tp_prioridad;
         document.querySelector('[name="r_contenido"]').value = data.contenido;
         document.querySelector('[name="r_procedencia"]').value = data.procedencia;
+        document.querySelector('[name="r_tp_documentacion"]').value = data.tp_documentacion;
+      });
+  }
+function ver_cumplimiento(cumplimiento_id) {
+    fetch(`/ver_cumplimiento_nota_proc/${cumplimiento_id}/`) // Vista Django que devuelve JSON con archivos
+      .then((response) => response.json())
+      .then((data) => {
+
+        const contenedor = document.getElementById("listaRequerimientos");
+        contenedor.innerHTML = "";
+        if (data.length === 0) {
+          contenedor.innerHTML = "<p>No hay requerimientos completados.</p>";
+        } else {
+          const tabla = document.createElement("table");
+          tabla.classList.add("table", "table-striped", "table-bordered");
+          const thead = document.createElement("thead");
+          thead.innerHTML = `
+          <tr>
+              <th>No.</th>
+              <th>Procedencia</th>
+              <th>Estado</th>
+              <th>Expediente</th>
+          </tr>`;
+          tabla.appendChild(thead);
+          const tbody = document.createElement("tbody");
+          data.forEach((req, index) => {
+            const fila = document.createElement("tr");
+            fila.innerHTML = `
+              <td>${index + 1}</td>
+              <td>${req.procedencia}</td>
+              <td>${req.estado_cumplimiento}</td>
+              <td>
+                  <button class="btn btn-sm btn-info" onclick="abrirCollapse('${index}', this)">
+                      Ver expediente
+                  </button>
+                  <button class="btn btn-sm btn-danger d-none" onclick="cerrarCollapse('${index}', this)">
+                      Cerrar
+                  </button>
+              </td>
+          `;
+            tbody.appendChild(fila);
+
+            const filaDetalles = document.createElement("tr");
+            filaDetalles.innerHTML = `
+              <td colspan="4" class="p-0 border-0">
+                  <div id="${index}" class="collapse p-2">
+                      ${generarDetalleExpediente(req)}
+                  </div>
+              </td>
+          `;
+            tbody.appendChild(filaDetalles);
+
+            tabla.appendChild(tbody);
+            contenedor.appendChild(tabla);
+            const select = document.getElementById(`selectDocumento-${req.id}`);
+            const visor = document.getElementById(`visorDocumento-${req.id}`);
+            if (select && visor) {
+              select.addEventListener('change', () => {
+                visor.src = select.value;
+              });
+            }
+          });
+        }
+      });
+  }
+  
+  function abrirCollapse(id, botonVer) {
+
+    const collapseElement = document.getElementById(id);
+    const bsCollapse = new bootstrap.Collapse(collapseElement, {
+      toggle: true,
+    });
+
+    // Mostrar el botón de cerrar
+    const botonCerrar = botonVer.nextElementSibling;
+    botonCerrar.classList.remove("d-none");
+    botonVer.classList.add("d-none");
+  }
+  function cerrarCollapse(id, botonCerrar) {
+    const collapseElement = document.getElementById(id);
+    const bsCollapse = new bootstrap.Collapse(collapseElement, {
+      toggle: false,
+    });
+    bsCollapse.hide();
+
+    // Mostrar el botón de ver nuevamente
+    const botonVer = botonCerrar.previousElementSibling;
+    botonVer.classList.remove("d-none");
+    botonCerrar.classList.add("d-none");
+  }
+  function generarDetalleExpediente(req) {
+    let html = `
+          <div class="card">
+              <div class="card-body">
+                  <h6 class="fw-bold">Disposición</h6>
+                  <p>${
+                    req.observacion ||
+                    '<span class="text-muted">Sin disposición registrada</span>'
+                  }</p>
+                <h6 class="fw-bold mt-3">Procedencia / Remitente</h6>
+                <div class="row">
+                    <div class="col-md-12">
+                        <select id="selectDocumento-${req.id}" class="form-control">
+                            ${req.documentos && req.documentos.length > 0
+                                ? req.documentos.map(doc => `<option value="${doc.archivo}">${doc.nombre}</option>`).join('')
+                                : `<option disabled selected>No hay documentos adjuntos</option>`}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <iframe id="visorDocumento-${req.id}" src="${
+                        req.documentos && req.documentos.length > 0 ? req.documentos[0].archivo : ''
+                    }" width="100%" height="600px" style="border: none"></iframe>
+                </div>
+            </div>
+        </div>
+    `;
+    return html;
+}
+
+function llenarItemId(id) {
+  document.getElementById("itemIdx").value = id;
+
+  fetch(`/obtener_disposicion/obtener/${id}/2/`)
+    .then((response) => response.json())
+    .then((data) => {
+      // Actualizo el campo de texto
+      document.querySelector('[name="disposicion"]').value = data.disposicion;
+      alert(data.disposicion)
+      // Actualizo el id con el que debe continuar
+      const nuevoId = data.id;
+
+      destinatarios = [];
+      actualizarListaDestinatarios();
+
+      // Petición para los destinatarios
+      fetch(`/nota_destinatarios/${nuevoId}/`)
+        .then((response) => response.json())
+        .then((data) => {
+          destinatarios = data.destinatarios || [];
+          actualizarListaDestinatarios();
+        });
+
+      // Petición para los documentos
+      fetch(`/revisar_disp_arch/${nuevoId}/`)
+        .then((response) => response.json())
+        .then((data) => {
+          const select = document.getElementById("selectDocument2");
+          const visor = document.getElementById("visorDocument2");
+          select.innerHTML = "";
+
+          data.archivos.forEach((doc) => {
+            let option = document.createElement("option");
+            option.value = doc.url;
+            option.textContent = doc.nombre;
+            select.appendChild(option);
+          });
+
+          if (data.archivos.length > 0) {
+            visor.src = data.archivos[0].url;
+            div_adj_disp.style.display = "none";
+            div_vis_disp.style.display = "block";
+          } else {
+            div_adj_disp.style.display = "block";
+            div_vis_disp.style.display = "none";
+          }
+        });
+    });
+}
+function actualizarListaDestinatarios() {
+  const lista = document.getElementById("listaDestinatarios");
+  lista.innerHTML = "";
+
+  destinatarios.forEach((d, index) => {
+    const li = document.createElement("li");
+    li.className = "list-group-item d-flex justify-content-between align-items-center";
+    li.textContent = `${d.procedencia_nombre} `;
+    
+    const btn = document.createElement("button");
+    btn.className = "btn btn-sm btn-danger";
+    btn.innerHTML = "<i class='fas fa-trash'></i>";
+    
+    btn.onclick = () => {
+      destinatarios.splice(index, 1);
+      actualizarListaDestinatarios();
+    };
+
+    li.appendChild(btn);
+    lista.appendChild(li);
+  });
+
+  document.getElementById("destinatariosInput").value = JSON.stringify(destinatarios);
+}
+  let destinatariosSeleccionados = [];
+
+  function agregarDestinatario() {
+    const select = document.getElementById("disp_sub_procedencia");
+    const lista = document.getElementById("listaDestinatarios");
+    const inputHidden = document.getElementById("destinatariosInput");
+
+    const id = select.value;
+    const nombre = select.options[select.selectedIndex].text;
+
+    if (id && !destinatariosSeleccionados.includes(id)) {
+      destinatariosSeleccionados.push(id);
+
+      const li = document.createElement("li");
+      li.classList.add(
+        "list-group-item",
+        "d-flex",
+        "justify-content-between",
+        "align-items-center"
+      );
+      li.textContent = nombre;
+
+      const btnEliminar = document.createElement("button");
+      btnEliminar.classList.add("btn", "btn-danger", "btn-sm");
+      btnEliminar.innerHTML = "<i class='fas fa-trash'></i>";
+      btnEliminar.onclick = () => {
+        destinatariosSeleccionados = destinatariosSeleccionados.filter(
+          (item) => item !== id
+        );
+        li.remove();
+        inputHidden.value = destinatariosSeleccionados.join(",");
+      };
+
+      li.appendChild(btnEliminar);
+      lista.appendChild(li);
+
+      // Actualizar input hidden
+      inputHidden.value = JSON.stringify(
+        destinatariosSeleccionados.map((id) => ({ sub_procedencia: id }))
+      );
+    }
+  }
+  function registrar_disposicion(event) {
+    event.preventDefault();
+
+    let formData = new FormData(document.getElementById("formRegistroCME"));
+
+    fetch("/registrar_disposicion/", {
+      method: "POST",
+      body: formData,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.status === "ok") {
+          alert("Registro guardado correctamente");
+          $("#modal_info_aprobado").modal("hide");
+          location.reload();
+        } else {
+          alert("Error: " + data.message);
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        alert("Ocurrió un error al guardar.");
       });
   }
 </script>

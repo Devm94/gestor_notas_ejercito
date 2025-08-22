@@ -50,7 +50,7 @@ def load_sub_procedencias(request):
 @login_required
 def form_recepcion(request):
     ls_procedencia = procedencia.objects.filter(cod_proced_superior__isnull=True)
-    ls_preregistro_notas = preregistro_nota.objects.all()
+    ls_preregistro_notas = preregistro_nota.objects.order_by('-fch_rcp').all()
     medio = tp_medio.objects.all()
     context = {'ls_procedencia' : ls_procedencia ,
                'ls_preregistro_notas' : ls_preregistro_notas,
@@ -71,14 +71,17 @@ def form_recepcion(request):
             )
         return redirect('recepcion')
     else:
-        #preregistro_nota.objects.all().delete()
         return render(request, 'documentacion/form_recepcion.html', context)
 @login_required
 def form_procesamiento(request):
     ls_tp_prioridad = tp_prioridad.objects.all()
     ls_preregistro_notas = preregistro_nota.objects.all()
+    v_tp_documentacion = tp_documentacion.objects.all()
+    ls_procedencia = procedencia.objects.filter(cod_proced_superior__isnull=True)
     context = {'ls_preregistro_notas' : ls_preregistro_notas,
-               'ls_tp_prioridad' : ls_tp_prioridad}
+               'ls_tp_prioridad' : ls_tp_prioridad,
+               'v_tp_documentacion' : v_tp_documentacion,
+               'ls_procedencia' : ls_procedencia ,}
     if request.method == "POST":
         print("Registrada")
         fch_nota_c = datetime.strptime(request.POST['fch_exp'], "%Y-%m-%dT%H:%M")
@@ -89,7 +92,7 @@ def form_procesamiento(request):
             cod_nota = preregistro_nota.objects.get(id=request.POST['itemId']),
             fch_exp = fch_nota_c,
             fch_limite = fch_limite_c,
-            asunto = request.POST['asunto'],
+            tp_documentacion = tp_documentacion.objects.get(id=request.POST['tp_documentacion']),
             contenido = request.POST['contenido'],
             tp_prioridad = tp_prioridad.objects.get(id=request.POST['tp_prioridad']),
             cod_usuario = User.objects.get(username=request.user),
@@ -98,16 +101,14 @@ def form_procesamiento(request):
         preregistro_nota.objects.filter(id=request.POST['itemId']).update(cod_estado_preregistro=nuevo_estado)
         return redirect('procesamiento')
     else:
-        #preregistro_nota.objects.all().delete()
-        print("Negativo")
         return render(request, 'documentacion/form_procesamiento.html', context)
 @login_required    
 def form_aprobacion(request):
     ls_procedencia = procedencia.objects.filter(cod_proced_superior__isnull=True)
-    notas = procesamiento_nota.objects.all()
+    notas = procesamiento_nota.objects.order_by('-cod_nota__cod_estado_preregistro', 'tp_prioridad').all()
     context = {
         'ls_procedencia' : ls_procedencia ,
-        'notas_procesadas' : notas
+        'notas_procesadas' : notas,
     }
 
     return render(request, 'documentacion/form_aprobacion.html', context)
@@ -154,7 +155,7 @@ def revisar_procesamiento(request, id):
         'fch_exp': fch_exp ,
         'fch_limite': fch_limite,
         'tp_prioridad': nota_proces.tp_prioridad.descrip_corta,
-        'asunto': nota_proces.asunto ,
+        'tp_documentacion': nota_proces.tp_documentacion.descrip_corta ,
         'contenido': nota_proces.contenido ,
         'procedencia': nota_proces.cod_nota.cod_procedencia.descrip_corta,
         'disposicion': nota_proces.disposicion,
@@ -205,24 +206,35 @@ def expediente_json_procesamiento(request, procesamiento_id):
 def registrar_disposicion(request):
     if request.method == 'POST':
         try:
+            
             item_id = request.POST.get('itemIdx')
-            contenido = request.POST.get('contenido')
+            contenido = request.POST.get('contenido') or request.POST.get('disposicion')
             destinatarios_json = request.POST.get('destinatarios')
-            proc = procesamiento_nota.objects.get(id=item_id)
+            proc = procesamiento_nota.objects.get(cod_nota__id=item_id)
             proc.disposicion = contenido
-
+            print(destinatarios_json)
             nota_preregistro = preregistro_nota.objects.get(id = proc.cod_nota.id)
             nota_preregistro.cod_estado_preregistro = estado_preregistro.objects.get(id = 8)
             nota_preregistro.save()
             proc.save()
+            
+            for file in request.FILES.getlist('arch_notas_enviadas'):
+                nota_disp_arch.objects.create(
+                    cod_nota=proc,
+                    arch=file
+                )
+            
             if destinatarios_json:
+                
                 destinatarios = json.loads(destinatarios_json)
                 for dest in destinatarios:
                     sub_procedencia_id = dest.get('sub_procedencia')
-                    notaxprocedencia.objects.create(
-                        cod_nota_id=item_id,
-                        cod_procedencia=procedencia.objects.get(id=sub_procedencia_id)
-                        )
+                    if sub_procedencia_id != None:
+                        print(sub_procedencia_id)
+                        notaxprocedencia.objects.create(
+                            cod_nota=proc,
+                            cod_procedencia=procedencia.objects.get(id=sub_procedencia_id)
+                            )
             return JsonResponse({'status': 'ok', 'message': 'Disposición y destinatarios registrados correctamente.'})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
@@ -252,6 +264,7 @@ def bandeja(request):
 def registrar_cumplimiento(request):
     if request.method == 'POST':
         try:
+            
             item_id = request.POST.get('itemIdx')
             cumplimiento = request.POST.get('cumplimiento')
             proc = notaxprocedencia.objects.get(id=item_id)
@@ -310,12 +323,43 @@ def obtener_subprocedencias(procedencia):
 
 def cumplimiento_por_nota(request, cumplimiento_id):
     # Filtramos las procedencias de la nota
+    print(cumplimiento_id)
     procedencias = notaxprocedencia.objects.filter(cod_nota__id=cumplimiento_id)
     
     data = []
     for proc in procedencias:
         # Obtenemos las evidencias de cumplimiento asociadas a esa procedencia
         evidencias = evidencia_cumpli_nota_arch.objects.filter(cod_nota=proc)
+        evidencias_data = [
+            {
+                "id": ev.id,
+                "nombre": ev.nombre_archivo,
+                "archivo": ev.arch.url if ev.arch else None,
+            }
+            for ev in evidencias
+        ]
+
+        data.append({
+            "id": proc.id,
+            "procedencia": proc.cod_procedencia.nombre if hasattr(proc.cod_procedencia, "nombre") else str(proc.cod_procedencia),
+            "estado_cumplimiento": proc.cod_estado_cumplimiento.descrip_corta,
+            "observacion": proc.Observacion,
+            "clase_prioridad": proc.clase_prioridad(),
+            "documentos": evidencias_data,
+        })
+
+    return JsonResponse(data, safe=False)
+
+def cumplimiento_por_nota_proc(request, cumplimiento_id):
+    nota = procesamiento_nota.objects.get(cod_nota__id = cumplimiento_id)
+    print(nota.id)
+    procedencias = notaxprocedencia.objects.filter(cod_nota__id=nota.id)
+
+    data = []
+    for proc in procedencias:
+        # Obtenemos las evidencias de cumplimiento asociadas a esa procedencia
+        evidencias = evidencia_cumpli_nota_arch.objects.filter(cod_nota=proc)
+        
         evidencias_data = [
             {
                 "id": ev.id,
@@ -369,9 +413,14 @@ def eliminar_nota(request, id):
     return redirect('recepcion')  # Cambia por la URL de tu lista
 
 @login_required
-def obtener_disposicion(request, id):
+def obtener_disposicion(request, id, otro_id):
+    if otro_id == 2:
+        id =  procesamiento_nota.objects.get(cod_nota__id = id)
+        id = id.id
+
+        
     nota_proces = procesamiento_nota.objects.get(pk=id)
-    
+
     data = {
         'id': nota_proces.id,
         'disposicion': nota_proces.disposicion or "",
@@ -399,12 +448,17 @@ def nota_destinatarios(request, id):
     return JsonResponse({"nota_id": nota.id, "destinatarios": destinatarios_data})
 
 def imprimir_nota(request, pk):
+    print(pk)
+    nota = procesamiento_nota.objects.get(id=pk)
+    print(nota)
+    return render(request, "documentacion/disposicion_print.html", {"nota": nota})
+def imprimir_nota_proc(request, pk):
     nota = procesamiento_nota.objects.get(cod_nota=pk)
     return render(request, "documentacion/disposicion_print.html", {"nota": nota})
 
 @login_required
 def nota_enviada(request):
-    v_notas_enviadas = notas_enviadas.objects.all()
+    v_notas_enviadas = notas_enviadas.objects.exclude(tp_estado_nota_env = tp_estado_nota_env.objects.get(id = 3)).order_by('tp_estado_nota_env', '-fch_env').all()
     v_procedencia = procedencia.objects.filter(cod_proced_superior__isnull=True)
     v_tp_documentacion = tp_documentacion.objects.all()
     v_tp_medio = tp_medio.objects.all()
@@ -417,24 +471,34 @@ def nota_enviada(request):
         'v_tp_estado_nota_env' : v_tp_estado_nota_env,
         }
     if request.method == "POST":
-        r_notas_enviadas = notas_enviadas.objects.create(
-            fch_env = request.POST['fch_env'],
-            no_exp = request.POST['numExpediente'],
-            tp_documentacion = tp_documentacion.objects.get(id=request.POST['tp_documentacion']),
-            contenido = request.POST['contenido'],
-            procedencia = procedencia.objects.get(id=request.POST['sub_procedencia']),
-            tp_medio = tp_medio.objects.get(id=request.POST['tp_medio']),
-            tp_estado_nota_env = tp_estado_nota_env.objects.get(id=1,),
-            cod_usuario = User.objects.get(username=request.user),
-        ) 
-        for file in request.FILES.getlist('arch_notas_enviadas'):
-            nota_env_arch.objects.create(
-                cod_nota_enviada=r_notas_enviadas,
-                arch=file
-            )
+        if request.POST['itemId'] == "":            
+            r_notas_enviadas = notas_enviadas.objects.create(
+                fch_env = request.POST['fch_env'],
+                no_exp = request.POST['numExpediente'],
+                tp_documentacion = tp_documentacion.objects.get(id=request.POST['tp_documentacion']),
+                contenido = request.POST['contenido'],
+                procedencia = procedencia.objects.get(id=request.POST['sub_procedencia']),
+                tp_medio = tp_medio.objects.get(id=request.POST['tp_medio']),
+                tp_estado_nota_env = tp_estado_nota_env.objects.get(id=1,),
+                cod_usuario = User.objects.get(username=request.user),) 
+            for file in request.FILES.getlist('arch_notas_enviadas'):
+                nota_env_arch.objects.create(
+                    cod_nota_enviada=r_notas_enviadas,
+                    arch=file
+                )
+        else:
+            v_nota_enviada = notas_enviadas.objects.get(pk=request.POST['itemId'])
+            v_nota_enviada.fch_env = request.POST['fch_env']
+            v_nota_enviada.no_exp = request.POST['numExpediente']
+            v_nota_enviada.tp_documentacion = tp_documentacion.objects.get(id=request.POST['tp_documentacion'])
+            v_nota_enviada.contenido = request.POST['contenido']
+            v_nota_enviada.tp_medio = tp_medio.objects.get(id=request.POST['tp_medio'])
+            v_nota_enviada.cod_usuario = User.objects.get(username=request.user)
+            v_nota_enviada.save()
+            for file in request.FILES.getlist('arch_notas_enviadas'):
+                nota_env_arch.objects.create(cod_nota_enviada=v_nota_enviada,arch=file)
         return redirect('notas_enviadas')
     else:
-        #preregistro_nota.objects.all().delete()
         return render(request, 'documentacion/notas_enviadas.html', context)
     
 
@@ -466,9 +530,6 @@ def ver_completado(request, cumplimiento_id):
     v_notas_enviadas = notas_enviadas.objects.get(id=cumplimiento_id)
     archivos = nota_env_resp_arch.objects.filter(cod_nota_enviada=v_notas_enviadas)
     completado =  v_notas_enviadas.completado
-    print(archivos)
-    for a in archivos:
-        print(a.nombre_archivo)
     data = {
         "archivos": [
             {"nombre": a.nombre_archivo, "url": a.arch.url}
@@ -518,4 +579,23 @@ def revisar_envio_resp_arch(request, envio_resp_nota_id):
         ]
     }
     print(data)
+    return JsonResponse(data)
+
+def eliminar_nota_enviada(request, id):
+    nota_enviada = notas_enviadas.objects.get(id=id)
+    nota_enviada.tp_estado_nota_env = tp_estado_nota_env.objects.get(id = 3)
+    nota_enviada.cod_usuario = User.objects.get(username=request.user)
+    nota_enviada.save()
+    return redirect('notas_enviadas') 
+
+@login_required
+def revisar_disp_arch(request, envio_nota_id):
+    v_disp_nota = procesamiento_nota.objects.get(id=envio_nota_id)
+    archivos = nota_disp_arch.objects.filter(cod_nota=v_disp_nota)
+    data = {
+        "archivos": [
+            {"nombre": a.nombre_archivo, "url": a.arch.url}
+            for a in archivos
+        ]
+    }
     return JsonResponse(data)

@@ -71,16 +71,12 @@
           </a>
         </li>
             {% endif %}
-                        {% comment %} {% if perms.documentos.bandeja %} {% endcomment %}
-
                   <li class="nav-item">
           <a href="{% url 'notas_enviadas' %}" class="nav-link">
-            <i class="nav-icon fas fa-inbox"></i>
+            <i class="nav-icon fas fa-paper-plane"></i>
             <p>Notas Enviadas</p>
           </a>
         </li>
-            {% comment %} {% endif %} {% endcomment %}
-
         </li>
                 <li class="nav-item mt-auto">
   <form action="{% url 'cerrar_sesion' %}" method="post" class="nav-link p-0 m-0">

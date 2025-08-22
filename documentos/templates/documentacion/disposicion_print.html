@@ -40,7 +40,7 @@
             height: 80px;
         }
         .content-cell {
-            height: 120px;
+            height: 150px;
         }
         .print-button {
             background-color: #4CAF50;
@@ -97,32 +97,65 @@
 </head>
 <body>
     <div class="container">
-        <h1 class="no-print">Formulario de Registro</h1>
-        
-        <button class="print-button no-print" onclick="window.print()">Imprimir Formulario</button>
-        
+        <h1 class="no-print">Disposición</h1>
         <table class="form-table">
             <tr>
-                <td class="form-header" style="width: 30%">FECHA:230908JUN025</td>
-                <td class="form-header" style="width: 40%">REGISTRO: 8</td>
-                <td class="form-header" style="width: 30%">CLASIFICACION:Urgente</td>
+                <td class="form-header" style="width: 30%">FECHA:{{ nota.fch_exp_formateada}}</td>
+                <td class="form-header" style="width: 40%">REGISTRO: {{ nota.cod_nota.no_exp}}</td>
+                <td class="form-header" style="width: 30%">CLASIFICACION:{{ nota.tp_prioridad}}</td>
             </tr>
             <tr>
-                <td style="background-color: #4CAF50;!important" colspan="3" class="form-header">PROCEDENCIA:E-6</td>
+                <td style="background-color:{{ nota.cod_nota.cod_procedencia.cod_proced_superior.color}};!important" colspan="3" class="form-header">PROCEDENCIA:{{ nota.cod_nota.cod_procedencia}}</td>
             </tr>
             <tr>
-                <td colspan="3" class="form-header">CONTENIDO: <br></td>
+                <td colspan="3" class="form-header">CONTENIDO: <br>{{ nota.contenido}}</td>
             </tr>
             <tr>
-                <td colspan="3" class="form-header content-cell">DISPOSICION</td>
+                <td colspan="3" class="form-header content-cell">DISPOSICION <br></td>
             </tr>
             <tr>
-                <td colspan="2" class="form-header">FECHA LIMITE:190908AGO025</td>
-                <td colspan="2" class="form-header">FIRMA:</td>
+                <td colspan="1" class="form-header">FECHA LIMITE: <br>{{ nota.fch_limite_formateada}}</td>
+                <td colspan="2" class="form-header" style="text-align: center;">GENERAL DE BRIGADA<br><br><br>HECTOR BENJAMIN VALERIO ARDON<br>COMANDANTE GENERAL DEL EJÉRCITO<br>EHO-2582</td>
             </tr>
         </table>
-        
-        <p class="no-print">Este formulario está listo para imprimir. Haz clic en el botón "Imprimir Formulario" para generar una copia física.</p>
-    </div>
+        <button class="print-button no-print" onclick="window.print()">Imprimir Formulario</button>
+     </div>
 </body>
+
+
+
+<script>
+function printTable() {
+    // Guardamos el contenido original de la página
+    var originalContent = document.body.innerHTML;
+
+    // Obtenemos solo la tabla
+    var tableContent = document.querySelector(".form-table").outerHTML;
+
+    // Reemplazamos el contenido de la página con la tabla
+    document.body.innerHTML = `
+        <html>
+        <head>
+            <title>Imprimir</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                table { width: 100%; border-collapse: collapse; }
+                td { border: 1px solid black; padding: 10px; vertical-align: top; }
+                .form-header { font-weight: bold; }
+                .content-cell { height: 120px; }
+            </style>
+        </head>
+        <body>
+            ${tableContent}
+        </body>
+        </html>
+    `;
+
+    // Ejecutamos la impresión
+    window.print();
+
+    // Restauramos el contenido original después de imprimir
+    document.body.innerHTML = originalContent;
+}
+</script>
 </html>

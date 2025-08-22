@@ -20,6 +20,25 @@
     padding: 0.5rem; /* Reducir el padding */
   }
 </style>
+<style>
+  .prioridad-alta {
+    background-color: #f8d7da !important;; /* rojo suave */
+}
+.prioridad-media {
+    background-color: #fff3cd !important;; /* amarillo suave */
+}
+.prioridad-baja {
+    background-color: #d1ecf1 !important;; /* azul claro */
+}
+
+/* Opcional: bordes suaves para mejor estética */
+.prioridad-alta, .prioridad-media, .prioridad-baja {
+    border-left: 5px solid !important;;
+}
+.prioridad-alta { border-color: #f5c6cb !important;; }
+.prioridad-media { border-color: #ffeeba !important;; }
+.prioridad-baja { border-color: #bee5eb !important;; }
+</style>
 <section class="content-header"></section>
 <section class="content">
   {% csrf_token %}
@@ -32,11 +51,7 @@
             <div class="card-tools"></div>
           </div>
           <div class="card-body">
-            <table
-              id="example1"
-              class="table table-bordered table-striped table-sm compact-table"
-              style="font-size: 12px"
-            >
+            <table id="example1" class="table table-bordered table-striped table-sm compact-table" style="font-size: 12px" >
               <thead>
                 <tr>
                   <th>No.</th>
@@ -50,7 +65,7 @@
               </thead>
               <tbody>
                 {% for l_notas_enviadas in v_notas_enviadas %}
-                <tr>
+                <tr class="{{ l_notas_enviadas.clase_prioridad }}">
                   <td>{{ forloop.counter }}</td>
                   <td>{{ l_notas_enviadas.fch_env_formateada }}</td>
                   <td>{{l_notas_enviadas.procedencia }}</td>
@@ -69,7 +84,7 @@
                         <a class="dropdown-item text-info" href="#" data-toggle="modal" data-target="#modal_completado" onclick="completar({{l_notas_enviadas.id }})">
                           Completar
                         </a>
-                        <a href="{% url 'eliminar_nota' l_notas_enviadas.id %}" class="dropdown-item text-danger" onclick="return confirm('¿Seguro que quieres eliminar este registro?');"> 
+                        <a href="{% url 'eliminar_nota_enviada' l_notas_enviadas.id %}" class="dropdown-item text-danger" onclick="return confirm('¿Seguro que quieres eliminar este registro?');"> 
                           Eliminar
                         </a>
                       </div>
@@ -82,7 +97,7 @@
             <br />
             <div class="container">
               <div class="btn_add_req">
-                <a href="#" class="btn btn-info" role="button" data-bs-toggle="modal" data-bs-target="#modal_agregar" id="btnAgregar" >
+                <a href="#" class="btn btn-info" role="button" data-toggle="modal" data-target="#modal_agregar" id="btnAgregar" >
                   Agregar
                   <i class="bi bi-plus-circle"></i>
                 </a>
@@ -188,7 +203,7 @@
               <ul id="fileList" class="list-unstyled mt-2"></ul>
             </div>
           </div>
-          <div id="Block">
+          <div id="Block" >
             <label for="selectDocument1" class="form-label">Seleccione un documento:</label>
             <select id="selectDocument1" class="form-select"></select>
             <div class="mt-3">
@@ -199,21 +214,13 @@
             <button type="submit" class="btn btn-primary" form="form_registrar"  >Registrar</button>
             <input type="hidden" name="detalles" id="detalles_hidden">
           </div>
-
         </form>
       </div>
     </div>
   </div>
 </div>
 
-<div
-  id="modal_completado"
-  class="modal fade"
-  tabindex="-1"
-  role="dialog"
-  aria-labelledby="modal_completadoLabel"
-  aria-hidden="true"
->
+<div id="modal_completado" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="modal_completadoLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
@@ -242,7 +249,7 @@
               <ul id="fileList1" class="list-unstyled mt-2"></ul>
             </div>
           </div>
-          <div >
+          <div id="div_visor_completado" >
             <label for="selectDocument2" class="form-label">Seleccione un documento:</label>
             <select id="selectDocument2" class="form-select"></select>
             <div class="mt-3">
@@ -254,19 +261,19 @@
               <i class="fas fa-save"></i> Guardar
             </button>
           </div>
-
         </form>
       </div>
       <div class="modal-footer">
-        <small class="text-muted"
-          >Complete todos los campos requeridos antes de guardar.</small
-        >
+        <small class="text-muted">Complete todos los campos requeridos antes de guardar.</small>
       </div>
     </div>
   </div>
 </div>
 <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'js/tabla.js' %}"></script>
+<script src="{% static 'js/func_procedencia.js' %}"></script>
+<script src="{% static 'js/func_notas_enviadas.js' %}"></script>
 <script src="{% static 'lib/adminlte/plugins/datatables/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'lib/adminlte/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
 <script src="{% static 'lib/adminlte/plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
@@ -275,68 +282,15 @@
 <script src="{% static 'lib/adminlte/plugins/datatables-buttons/js/buttons.bootstrap4.min.js' %}"></script>
 
 <script>
-  jQuery(document).ready(function ($) {
-    $("#example1").DataTable({
-      language: {
-        decimal: "",
-        emptyTable: "No hay datos disponibles en la tabla",
-        info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-        infoEmpty: "Mostrando 0 a 0 de 0 entradas",
-        infoFiltered: "(filtrado de _MAX_ entradas totales)",
-        infoPostFix: "",
-        thousands: ",",
-        lengthMenu: "Mostrar _MENU_ entradas",
-        loadingRecords: "Cargando...",
-        processing: "Procesando...",
-        search: "Buscar:",
-        zeroRecords: "No se encontraron registros coincidentes",
-        paginate: {
-          first: "Primero",
-          last: "Último",
-          next: "Siguiente",
-          previous: "Anterior",
-        },
-        aria: {
-          sortAscending: ": activar para ordenar la columna ascendente",
-          sortDescending: ": activar para ordenar la columna descendente",
-        },
-      },
-    });
-  });
-
-  $(document).ready(function () {
-    $("#procedencia_sup").change(function () {
-      var procedencia_id = $(this).val();
-      var url = "{% url 'load_sub_procedencias' %}";
-      if (procedencia_id) {
-        $.ajax({
-          url: url,
-          data: { procedencia_id: procedencia_id },
-          success: function (data) {
-            $("#sub_procedencia").empty(); // Limpiar el combobox de modelos
-            $("#sub_procedencia").append(
-              '<option value="" selected >Selecciona una procedencia</option>'
-            );
-            $.each(data, function (key, value) {
-              $("#sub_procedencia").append(
-                '<option value="' +
-                  value.id +
-                  '">' +
-                  value.descrip_corta +
-                  "</option>"
-              );
-            });
-          },
-        });
-      } else {
-        $("#sub_procedencia").empty();
-        $("#sub_procedencia").append(
-          '<option value="">Selecciona una procedencia</option>'
-        );
-      }
-    });
-  });
-
+  var loadSubProcedenciasUrl = "{% url 'load_sub_procedencias' %}";
+  var Select_Revisar = "selectDocument1";
+  var Visor_Revisar = "visorDocument1";
+  var fileInput_Agregar = "fileInput1";
+  var dropzone_Agregar = "dropzone1";
+  var fileList_Agregar = "fileList1";
+  var fileInput_Completar = "fileInput";
+  var dropzone_Completar = "dropzone";
+  var fileList_Completar = "fileList";
 
   function verArchivo(select) {
     var url = select.value;
@@ -358,15 +312,12 @@
           option.value = doc.url;
           option.textContent = doc.nombre;
           select.appendChild(option);
-          alert(doc.nombre);
         });
         if (data.archivos.length > 0) {
           visor.src = data.archivos[0].url;
         }
       });
-
     fetch(`/revisar_nota_enviada/${id}/`)
-    
       .then((response) => response.json())
       .then((data) => {
         document.querySelector('[name="itemId"]').value = data.id;
@@ -431,7 +382,6 @@
         alert("Ocurrió un error al guardar.");
       });
   }
-
   function completar(id) {
     document.getElementById("id_nota_enviada").value = id;
       fetch(`/revisar_envio_resp_arch/${id}/`) // Vista Django que devuelve JSON con archivos
@@ -439,17 +389,19 @@
       .then((data) => {
         const select = document.getElementById("selectDocument2");
         const visor = document.getElementById("visorDocument2");
-        alert("a");
         select.innerHTML = "";
         data.archivos.forEach((doc) => {
           let option = document.createElement("option");
           option.value = doc.url;
           option.textContent = doc.nombre;
           select.appendChild(option);
-          alert(doc.nombre);
         });
         if (data.archivos.length > 0) {
           visor.src = data.archivos[0].url;
+        }
+        if (document.getElementById("selectDocument2").value == ""){
+          const div_visor = document.getElementById("div_visor_completado");
+          div_visor.style.display = "none"; 
         }
       });
 
@@ -459,158 +411,5 @@
         document.querySelector('[name="completado"]').value = data.completado || "";
       });
   }
-
-  document.addEventListener("DOMContentLoaded", function () {
-    let fileInput = document.getElementById("fileInput1");
-    let dropzone = document.getElementById("dropzone1");
-    let fileList = document.getElementById("fileList1");
-    let selectedFiles = new DataTransfer(); // 📌 Para manejar archivos correctamente
-
-    // 📌 Detectar archivos desde el input
-    fileInput.addEventListener("change", function (event) {
-      handleFiles(event.target.files);
-    });
-    // 📌 Manejar archivos cuando se arrastran al área
-    dropzone.addEventListener("drop", function (event) {
-      event.preventDefault();
-      handleFiles(event.dataTransfer.files);
-    });
-    dropzone.addEventListener("dragover", function (event) {
-      event.preventDefault();
-    });
-    // 📌 Función para manejar los archivos seleccionados
-    function handleFiles(files) {
-      for (let file of files) {
-        if (!fileExists(file)) {
-          selectedFiles.items.add(file); // Agrega el archivo a la lista de DataTransfer
-          let listItem = document.createElement("li");
-          listItem.className =
-            "d-flex justify-content-between align-items-center p-2 border rounded mt-1";
-          listItem.innerHTML = `
-                  ${file.name}
-                  <button type="button" class="btn btn-danger btn-sm ms-2" onclick="removeFile('${file.name}')">✖</button>`;
-          fileList.appendChild(listItem);
-        }
-      }
-      fileInput.files = selectedFiles.files; // Actualiza los archivos en el input
-    }
-    function fileExists(file) {
-      for (let i = 0; i < selectedFiles.files.length; i++) {
-        if (selectedFiles.files[i].name === file.name) {
-          return true;
-        }
-      }
-      return false;
-    }
-    window.removeFile = function (fileName) {
-      for (let i = 0; i < selectedFiles.items.length; i++) {
-        if (selectedFiles.items[i].getAsFile().name === fileName) {
-          selectedFiles.items.remove(i); // Elimina el archivo de la lista
-          break;
-        }
-      }
-      fileInput.files = selectedFiles.files; // Actualiza los archivos en el input
-      updateFileList();
-    };
-    function updateFileList() {
-      fileList.innerHTML = "";
-      for (let i = 0; i < selectedFiles.files.length; i++) {
-        let file = selectedFiles.files[i];
-
-        let listItem = document.createElement("li");
-        listItem.className =
-          "d-flex justify-content-between align-items-center p-2 border rounded mt-1";
-
-        listItem.innerHTML = `
-              ${file.name}
-              <button type="button" class="btn btn-danger btn-sm ms-2" onclick="removeFile('${file.name}')">✖</button>`;
-        fileList.appendChild(listItem);
-      }
-    }
-  });
-  document.addEventListener("DOMContentLoaded", function () {
-    let fileInput = document.getElementById("fileInput");
-    let dropzone = document.getElementById("dropzone");
-    let fileList = document.getElementById("fileList");
-    let selectedFiles = new DataTransfer(); // 📌 Para manejar archivos correctamente
-
-    // 📌 Detectar archivos desde el input
-    fileInput.addEventListener("change", function (event) {
-      handleFiles(event.target.files);
-    });
-    // 📌 Manejar archivos cuando se arrastran al área
-    dropzone.addEventListener("drop", function (event) {
-      event.preventDefault();
-      handleFiles(event.dataTransfer.files);
-    });
-    dropzone.addEventListener("dragover", function (event) {
-      event.preventDefault();
-    });
-    // 📌 Función para manejar los archivos seleccionados
-    function handleFiles(files) {
-      for (let file of files) {
-        if (!fileExists(file)) {
-          selectedFiles.items.add(file); // Agrega el archivo a la lista de DataTransfer
-          let listItem = document.createElement("li");
-          listItem.className =
-            "d-flex justify-content-between align-items-center p-2 border rounded mt-1";
-          listItem.innerHTML = `
-                  ${file.name}
-                  <button type="button" class="btn btn-danger btn-sm ms-2" onclick="removeFile('${file.name}')">✖</button>`;
-          fileList.appendChild(listItem);
-        }
-      }
-      fileInput.files = selectedFiles.files; // Actualiza los archivos en el input
-    }
-    function fileExists(file) {
-      for (let i = 0; i < selectedFiles.files.length; i++) {
-        if (selectedFiles.files[i].name === file.name) {
-          return true;
-        }
-      }
-      return false;
-    }
-    window.removeFile = function (fileName) {
-      for (let i = 0; i < selectedFiles.items.length; i++) {
-        if (selectedFiles.items[i].getAsFile().name === fileName) {
-          selectedFiles.items.remove(i); // Elimina el archivo de la lista
-          break;
-        }
-      }
-      fileInput.files = selectedFiles.files; // Actualiza los archivos en el input
-      updateFileList();
-    };
-    function updateFileList() {
-      fileList.innerHTML = "";
-      for (let i = 0; i < selectedFiles.files.length; i++) {
-        let file = selectedFiles.files[i];
-
-        let listItem = document.createElement("li");
-        listItem.className =
-          "d-flex justify-content-between align-items-center p-2 border rounded mt-1";
-
-        listItem.innerHTML = `
-              ${file.name}
-              <button type="button" class="btn btn-danger btn-sm ms-2" onclick="removeFile('${file.name}')">✖</button>`;
-        fileList.appendChild(listItem);
-      }
-    }
-  });
-  document.addEventListener("DOMContentLoaded", function () {
-    const btnAgregar = document.getElementById("btnAgregar");
-    const documentBlock = document.getElementById("Block");
-    const btnRevisar = document.getElementById("btnRevisar");
-    btnAgregar.addEventListener("click", function () {
-      Block.style.display = "none"; 
-      document.querySelector('[name="itemId"]').value = "";
-      document.querySelector('[name="fch_env"]').value = "";
-      document.querySelector('[name="numExpediente"]').value = "";
-      document.querySelector('[name="tp_documentacion"]').value = "";
-      document.querySelector('[name="tp_medio"]').value = "";
-      document.querySelector('[name="contenido"]').value = "";
-      document.querySelector('[name="procedencia_sup"]').value = "";
-      document.querySelector('[name="sub_procedencia"]').value = "";
-    });
-  });
 </script>
 {% endblock %}

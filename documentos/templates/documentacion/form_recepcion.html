@@ -185,6 +185,7 @@
             <div class="col-md-6">
               <label for="medio" class="form-label">Medio</label>
               <select class="form-control" id="medio" name="medio" required>
+                <option value="" selected>Seleccione...</option>
                 {% for medio in tp_medio %}
                 <option value="{{ medio.id }}">
                   {{ medio.descrip_corta }}
@@ -247,6 +248,7 @@
                 multiple
                 accept=".pdf,image/*"
                 class="form-control d-none"
+                required
               />
               <ul id="fileList" class="list-unstyled mt-2"></ul>
             </div>
