@@ -39,15 +39,10 @@
           <div class="card-header">
             <h3 class="card-title">Registro de Notas</h3>
             <div class="card-tools">
-
             </div>
           </div>
           <div class="card-body">
-            <table
-              id="example1"
-              class="table table-bordered table-striped table-sm compact-table"
-              style="font-size: 12px"
-            >
+            <table id="example1" class="table table-bordered table-striped table-sm compact-table" style="font-size: 12px">
               <thead>
                 <tr>
                   <th>No.</th>
@@ -70,57 +65,22 @@
                   <td>{{ls_preregistro_notas.cod_usuario}}</td>
                   <td>
                     <div class="dropdown">
-                      <button
-                        class="btn btn-outline-primary btn-sm btn-block dropdown-toggle"
-                        type="button"
-                        id="accionesCentro{{ cme.id }}"
-                        data-toggle="dropdown"
-                        aria-haspopup="true"
-                        aria-expanded="false"
-                      >
+                      <button class="btn btn-outline-primary btn-sm btn-block dropdown-toggle" type="button" id="accionesCentro{{ cme.id }}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Acciones
                       </button>
-                      <div
-                        class="dropdown-menu"
-                        aria-labelledby="accionesCentro{{ notas_procesadas.id }}"
-                      >
-                        <!-- <a
-                          class="dropdown-item text-success"
-                          href="#"
-                          data-toggle="modal"
-                          data-target="#modal_info_procesado"
-                          onclick="info_procesado({{notas_procesadas.id }})"
-                        >
-                          Expediente
-                        </a> -->
-                        <a
-                          class="dropdown-item text-info"
-                          href="#"
-                          data-toggle="modal"
-                          data-target="#modal_revisar"
-                          onclick="revisar({{ls_preregistro_notas.id }})"
-                        >
+                      <div class="dropdown-menu" aria-labelledby="accionesCentro{{ notas_procesadas.id }}">
+                        <a class="dropdown-item text-info" href="#" data-toggle="modal" data-target="#modal_revisar" onclick="revisar({{ls_preregistro_notas.id }})">
                           Revisar
                         </a>
                         {% if ls_preregistro_notas.cod_estado_preregistro.id == 4 %}
-                        <a
-                          class="dropdown-item text-warning"
-                          href="#"
-                          data-toggle="modal"
-                          data-target="#modal_corregir"
-                          onclick="corregir({{ls_preregistro_notas.id }})"
-                        >
+                        <a class="dropdown-item text-warning" href="#" data-toggle="modal" data-target="#modal_corregir" onclick="corregir({{ls_preregistro_notas.id }})">
                           Corregir
                         </a>
                         {% endif %}
                          {% if ls_preregistro_notas.cod_estado_preregistro.id == 1 %}
-<a
-  href="{% url 'eliminar_nota' ls_preregistro_notas.id %}"
-  class="dropdown-item text-danger"
-  onclick="return confirm('¿Seguro que quieres eliminar este registro?');"
->
-  Eliminar
-</a>
+                         <a href="{% url 'eliminar_nota' ls_preregistro_notas.id %}" class="dropdown-item text-danger" onclick="return confirm('¿Seguro que quieres eliminar este registro?');">
+                          Eliminar
+                        </a>
                         {% endif %}
                       </div>
                     </div>

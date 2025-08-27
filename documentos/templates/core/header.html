@@ -22,7 +22,7 @@
       <div class="image">
         <img
           src="{% static 'img/ejercito.png' %}"
-          class=" elevation-2" 
+          class="elevation-2"
           alt="User Image"
         />
       </div>
@@ -37,58 +37,68 @@
         role="menu"
         data-accordion="false"
       >
-            {% if perms.documentos.recepcion %}
-            <li class="nav-item">
-              <a href="{% url 'recepcion' %}" class="nav-link">
-                <i class="nav-icon fas fa-landmark"></i>
-                <p>Recepcion</p>
-              </a>
-            </li>
-            {% endif %}
-            {% if perms.documentos.procesar %}
-            <li class="nav-item">
-              <a href="{% url 'procesamiento' %}" class="nav-link">
-                <i class="nav-icon fas fa-file-alt"></i>
-                <p>Procesamiento</p>
-              </a>
-            </li>
-            {% endif %}
-            {% if perms.documentos.aprobar %}
+        {% if perms.documentos.recepcion %}
+        <li class="nav-item">
+          <a href="{% url 'recepcion' %}" class="nav-link">
+            <i class="nav-icon fas fa-landmark"></i>
+            <p>Recepcion</p>
+          </a>
+        </li>
+        {% endif %} {% if perms.documentos.procesar %}
+        <li class="nav-item">
+          <a href="{% url 'procesamiento' %}" class="nav-link">
+            <i class="nav-icon fas fa-file-alt"></i>
+            <p>Procesamiento</p>
+          </a>
+        </li>
+        {% endif %} {% if perms.documentos.aprobar %}
 
-            <li class="nav-item">
-              <a href="{% url 'aprobacion' %}" class="nav-link">
-                <i class="nav-icon fas fa-book"></i>
-                <p>Aprobacion</p>
-              </a>
-            </li>
-            {% endif %}
-            {% if perms.documentos.bandeja %}
+        <li class="nav-item">
+          <a href="{% url 'aprobacion' %}" class="nav-link">
+            <i class="nav-icon fas fa-book"></i>
+            <p>Aprobacion</p>
+          </a>
+        </li>
+        {% endif %} {% if perms.documentos.bandeja %}
 
-                  <li class="nav-item">
+        <li class="nav-item">
           <a href="{% url 'bandeja' %}" class="nav-link">
             <i class="nav-icon fas fa-inbox"></i>
             <p>Bandeja</p>
           </a>
         </li>
-            {% endif %}
-                  <li class="nav-item">
+        {% endif %}
+        <li class="nav-item">
           <a href="{% url 'notas_enviadas' %}" class="nav-link">
             <i class="nav-icon fas fa-paper-plane"></i>
             <p>Notas Enviadas</p>
           </a>
         </li>
+        <li class="nav-item">
+          <a href="{% url 'calendario' %}" class="nav-link">
+            <i class="nav-icon fas fa-calendar"></i>
+            <p>Calendario</p>
+          </a>
         </li>
-                <li class="nav-item mt-auto">
-  <form action="{% url 'cerrar_sesion' %}" method="post" class="nav-link p-0 m-0">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-block text-left text-white" style="background: none; border: none;">
-      <i class="nav-icon fas fa-sign-out-alt"></i>
-      <p>Cerrar sesión</p>
-    </button>
-  </form>
-</li>
-      </ul>
 
+        <li class="nav-item mt-auto">
+          <form
+            action="{% url 'cerrar_sesion' %}"
+            method="post"
+            class="nav-link p-0 m-0"
+          >
+            {% csrf_token %}
+            <button
+              type="submit"
+              class="btn btn-block text-left text-white"
+              style="background: none; border: none"
+            >
+              <i class="nav-icon fas fa-sign-out-alt"></i>
+              <p>Cerrar sesión</p>
+            </button>
+          </form>
+        </li>
+      </ul>
     </nav>
   </div>
 </aside>

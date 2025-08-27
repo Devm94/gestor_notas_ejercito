@@ -25,13 +25,9 @@ def inicio_2(request):
     log_user = usuario.objects.get(cod_user=request.user)
     nom_completo = log_user.cod_user.first_name + " " + log_user.cod_user.last_name
     totalnotas = preregistro_nota.objects.count()
-    print(nom_completo)
     totalnotas_completados = preregistro_nota.objects.filter(cod_estado_preregistro = estado_preregistro.objects.get(id = 7)).count()
     totalnotas_pendientes = preregistro_nota.objects.exclude(cod_estado_preregistro = estado_preregistro.objects.get(id = 7)).count()
-    print(totalnotas)
-    print(totalnotas_completados)
-    print(totalnotas)
-    
+
     context = {
         'CV': f"{totalnotas:,}",
         'ME' : f"{totalnotas_completados:,}",
@@ -75,7 +71,7 @@ def form_recepcion(request):
 @login_required
 def form_procesamiento(request):
     ls_tp_prioridad = tp_prioridad.objects.all()
-    ls_preregistro_notas = preregistro_nota.objects.all()
+    ls_preregistro_notas = preregistro_nota.objects.order_by("cod_estado_preregistro").all()
     v_tp_documentacion = tp_documentacion.objects.all()
     ls_procedencia = procedencia.objects.filter(cod_proced_superior__isnull=True)
     context = {'ls_preregistro_notas' : ls_preregistro_notas,
@@ -599,3 +595,26 @@ def revisar_disp_arch(request, envio_nota_id):
         ]
     }
     return JsonResponse(data)
+
+def api_eventos(request):
+    eventos = []
+    notas = procesamiento_nota.objects.all()
+    for nota in notas:
+        eventos.append({
+            "id": nota.id,
+            "title": nota.tp_documentacion.descrip_corta + "-" + str(nota.cod_nota.cod_procedencia),  # el asunto será el texto que se muestra
+            "tipo_doc": nota.tp_documentacion.descrip_corta,
+            "asunto": nota.tp_documentacion.descrip_corta,
+            "start": nota.fch_limite.strftime("%Y-%m-%dT%H:%M:%S"),  # fecha límite
+            "end": nota.fch_limite.strftime("%Y-%m-%dT%H:%M:%S"),
+            "backgroundColor":nota.cod_nota.cod_procedencia.cod_proced_superior.color,  # color opcional
+            "borderColor": nota.cod_nota.cod_procedencia.cod_proced_superior.color,
+            "allDay": False,
+            "procedencia": nota.cod_nota.cod_procedencia.descrip_larga,
+            "contenido": nota.contenido,
+            "disposicion": nota.disposicion,
+        })
+    return JsonResponse(eventos, safe=False)
+
+def calendario(request):
+    return render(request, "documentacion/calendario.html")

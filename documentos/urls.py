@@ -38,4 +38,6 @@ urlpatterns = [
     path('revisar_envio_resp_arch/<int:envio_resp_nota_id>/', views.revisar_envio_resp_arch, name='revisar_envio_resp_arch'),
     path('eliminar_nota_enviada/<int:id>/', views.eliminar_nota_enviada, name='eliminar_nota_enviada'),
     path('revisar_disp_arch/<int:envio_nota_id>/', views.revisar_disp_arch, name='revisar_disp_arch'),
+    path('api/eventos/', views.api_eventos, name='api_eventos'),
+    path("calendario/", views.calendario, name="calendario"),
     ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

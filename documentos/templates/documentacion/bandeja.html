@@ -1,43 +1,9 @@
 {% extends '../core/base.html' %} {% load static %} {% block 'contenido' %}
-<link
-  rel="stylesheet"
-  href="{% static 'lib/adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}"
-/>
-<link
-  rel="stylesheet"
-  href="{% static 'lib/adminlte/plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}"
-/>
-<link
-  rel="stylesheet"
-  href="{% static 'lib/adminlte/plugins/datatables-buttons/css/buttons.bootstrap4.min.css' %}"
-/>
-<style>
-  .prioridad-alta {
-    background-color: #f8d7da !important; /* rojo suave */
-  }
-  .prioridad-media {
-    background-color: #fff3cd !important; /* amarillo suave */
-  }
-  .prioridad-baja {
-    background-color: #d1ecf1 !important; /* azul claro */
-  }
+<link rel="stylesheet" href="{% static 'lib/adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}"/>
+<link rel="stylesheet" href="{% static 'lib/adminlte/plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}"/>
+<link rel="stylesheet" href="{% static 'lib/adminlte/plugins/datatables-buttons/css/buttons.bootstrap4.min.css' %}"/>
+<link rel="stylesheet" href="{% static 'css/estilo_alerta.css' %}"/>
 
-  /* Opcional: bordes suaves para mejor estética */
-  .prioridad-alta,
-  .prioridad-media,
-  .prioridad-baja {
-    border-left: 5px solid !important;
-  }
-  .prioridad-alta {
-    border-color: #f5c6cb !important;
-  }
-  .prioridad-media {
-    border-color: #ffeeba !important;
-  }
-  .prioridad-baja {
-    border-color: #bee5eb !important;
-  }
-</style>
 <section class="content-header"></section>
 <section class="content">
   {% csrf_token %}
@@ -50,11 +16,7 @@
             <div class="card-tools"></div>
           </div>
           <div class="card-body">
-            <table
-              id="example1"
-              class="table table-bordered table-striped table-sm compact-table"
-              style="font-size: 12px"
-            >
+            <table id="example1" class="table table-bordered table-striped table-sm compact-table" style="font-size: 12px" >
               <thead>
                 <tr>
                   <th>No.</th>
@@ -79,36 +41,14 @@
                   <td>{{nota.cod_estado_cumplimiento}}</td>
                   <td>
                     <div class="dropdown">
-                      <button
-                        class="btn btn-outline-primary btn-sm btn-block dropdown-toggle"
-                        type="button"
-                        id="accionesCentro{{ nota.id }}"
-                        data-toggle="dropdown"
-                        aria-haspopup="true"
-                        aria-expanded="false"
-                      >
+                      <button class="btn btn-outline-primary btn-sm btn-block dropdown-toggle" type="button" id="accionesCentro{{ nota.id }}"data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         Acciones
                       </button>
-                      <div
-                        class="dropdown-menu"
-                        aria-labelledby="accionesCentro{{ nota.cod_nota.id }}"
-                      >
-                        <a
-                          class="dropdown-item text-success"
-                          href="#"
-                          data-toggle="modal"
-                          data-target="#modal_info_procesado"
-                          onclick="info_procesado({{nota.cod_nota.id }})"
-                        >
+                      <div class="dropdown-menu" aria-labelledby="accionesCentro{{ nota.cod_nota.id }}" >
+                        <a  class="dropdown-item text-success" href="#" data-toggle="modal" data-target="#modal_info_procesado" onclick="info_procesado({{nota.cod_nota.id }})" >
                           Disposición
                         </a>
-                        <a
-                          class="dropdown-item text-info"
-                          href="#"
-                          data-toggle="modal"
-                          data-target="#modal_info_aprobado"
-                          onclick="vercumplimiento({{ nota.id }})"
-                        >
+                        <a class="dropdown-item text-info" href="#" data-toggle="modal" data-target="#modal_info_aprobado" onclick="vercumplimiento({{ nota.id }})">
                           Cumplimiento
                         </a>
                       </div>
@@ -124,25 +64,12 @@
     </div>
   </div>
 </section>
-<div
-  id="modal_info_procesado"
-  class="modal fade"
-  tabindex="-1"
-  role="dialog"
-  aria-labelledby="modal_info_procesadoLabel"
-  aria-hidden="true"
->
+<div id="modal_info_procesado" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="modal_info_procesadoLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
-    a
     <div class="modal-content">
       <div class="modal-header ">
         <h5 class="modal-title">Disposición</h5>
-        <button
-          type="button"
-          class="btn btn-close btn-light"
-          data-dismiss="modal"
-          aria-label="Cerrar"
-        >
+        <button type="button" class="btn btn-close btn-light" data-dismiss="modal" aria-label="Cerrar">
           Cerrar
         </button>
       </div>
@@ -151,179 +78,76 @@
         <div class="row mb-3">
           <div class="col-md-6">
             <label for="fechaNota" class="form-label">Fecha de Nota</label>
-            <input
-              type="text"
-              class="form-control"
-              id="fch_exp"
-              name="fch_exp"
-              readonly
-            />
+            <input type="text" class="form-control" id="fch_exp" name="fch_exp" readonly />
           </div>
           <div class="col-md-6">
             <label for="fechaLimite" class="form-label">Fecha Límite</label>
-            <input
-              type="text"
-              class="form-control"
-              id="fch_limite"
-              name="fch_limite"
-              readonly
-            />
+            <input type="text" class="form-control" id="fch_limite" name="fch_limite" readonly/>
           </div>
         </div>
         <div class="row mb-3">
           <div class="col-md-6">
             <label for="asunto" class="form-label">Procedencia</label>
-            <input
-              type="text"
-              class="form-control"
-              id="procedencia_disp"
-              name="procedencia_disp"
-              readonly
-            />
+            <input type="text" class="form-control" id="procedencia_disp" name="procedencia_disp" readonly />
           </div>
           <div class="col-md-6">
             <label for="prioridad" class="form-label">Prioridad</label>
-            <input
-              type="text"
-              class="form-control"
-              id="tp_prioridad"
-              name="tp_prioridad"
-              readonly
-            />
+            <input type="text" class="form-control" id="tp_prioridad" name="tp_prioridad" readonly/>
           </div>
         </div>
         <div class="row mb-3">
           <div class="col-md-12">
             <label for="contenido" class="form-label">Contenido</label>
-            <textarea
-              class="form-control"
-              id="contenido_disp"
-              name="contenido_disp"
-              rows="3"
-              readonly
-            ></textarea>
+            <textarea class="form-control" id="contenido_disp" name="contenido_disp" rows="3" readonly></textarea>
           </div>
         </div>
         <div class="row mb-3">
           <div class="col-md-12">
             <label for="contenido" class="form-label">Disposición</label>
-            <textarea
-              class="form-control"
-              id="disposicion"
-              name="disposicion"
-              rows="3"
-              readonly
-            ></textarea>
+            <textarea class="form-control" id="disposicion" name="disposicion" rows="3" readonly></textarea>
           </div>
         </div>
-        <label for="selectDocumento" class="form-label"
-          >Seleccione un documento:</label
-        >
+        <label for="selectDocumento" class="form-label">Seleccione un documento:</label>
         <select id="selectDocumento" class="form-select"></select>
-
-        <!-- Visualizador de PDF -->
-        <div class="mt-3">
-          <iframe
-            id="visorDocumento"
-            src=""
-            width="100%"
-            height="600px"
-            style="border: none"
-          ></iframe>
+        <div class="mt-3"><iframe id="visorDocumento" src="" width="100%" height="600px" style="border: none"></iframe>
         </div>
       </div>
       <div class="modal-footer">
-        <small class="text-muted"
-          >Complete todos los campos requeridos antes de guardar.</small
-        >
+        <small class="text-muted">Complete todos los campos requeridos antes de guardar.</small>
       </div>
     </div>
   </div>
 </div>
-<div
-  id="modal_info_aprobado"
-  class="modal fade"
-  tabindex="-1"
-  role="dialog"
-  aria-labelledby="modal_info_aprobadoLabel"
-  aria-hidden="true"
->
+<div id="modal_info_aprobado" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="modal_info_aprobadoLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Cumplimiento a la Disposición</h5>
-        <button
-          type="button"
-          class="btn btn-close btn-light"
-          data-dismiss="modal"
-          aria-label="Cerrar"
-        >
+        <button type="button" class="btn btn-close btn-light" data-dismiss="modal" aria-label="Cerrar">
           Cerrar
         </button>
       </div>
       <div class="modal-body">
-        <form
-          id="formRegistroCME"
-          method="POST"
-          enctype="multipart/form-data"
-          onsubmit="registrar_disposicion(event)"
-        >
+        <form id="formRegistroCME" method="POST" enctype="multipart/form-data" onsubmit="registrar_disposicion(event)">
           <input type="hidden" id="itemIdx" name="itemIdx" />
-
           <div class="row mb-3">
             <div class="col-md-12">
               <label for="contenido" class="form-label">Cumplimiento</label>
-              <textarea
-                class="form-control"
-                id="cumplimiento"
-                name="cumplimiento"
-                rows="3"
-                required
-              ></textarea>
+              <textarea class="form-control" id="cumplimiento" name="cumplimiento" rows="3" required></textarea>
             </div>
           </div>
-
-          <!-- Visualizador de PDF -->
           <div class="mt-3">
-            <label for="selectDocumento_cumplimiento" class="form-label"
-              >Seleccione un documento:</label
-            >
-            <select
-              id="selectDocumento_cumplimiento"
-              class="form-select"
-            ></select>
-            <iframe
-              id="visorDocumento_cumplimiento"
-              src=""
-              width="100%"
-              height="600px"
-              style="border: none"
-            ></iframe>
+            <label for="selectDocumento_cumplimiento" class="form-label" >Seleccione un documento:</label>
+            <select id="selectDocumento_cumplimiento" class="form-select"></select>
+            <iframe id="visorDocumento_cumplimiento" src="" width="100%" height="600px" style="border: none"></iframe>
           </div>
           <div class="mb-3">
             <label class="form-label">Adjuntar Documentos</label>
-            <div
-              id="dropzone"
-              class="border border-primary p-3 text-center"
-              ondragover="event.preventDefault();"
-            >
-              <p>
-                Arrastra y suelta archivos aquí o
-                <label
-                  for="fileInput"
-                  class="text-primary"
-                  style="cursor: pointer"
-                  >selecciona</label
-                >
+            <div id="dropzone" class="border border-primary p-3 text-center" ondragover="event.preventDefault();">
+              <p>Arrastra y suelta archivos aquí o
+                <label for="fileInput" class="text-primary" style="cursor: pointer">selecciona</label>
               </p>
-              <input
-                type="file"
-                id="fileInput"
-                name="arch"
-                multiple
-                accept=".pdf,image/*"
-                class="form-control d-none"
-              />
+              <input type="file" id="fileInput" name="arch" multiple accept=".pdf,image/*" class="form-control d-none"/>
               <ul id="fileList" class="list-unstyled mt-2"></ul>
             </div>
           </div>
@@ -334,52 +158,24 @@
           </div>
         </form>
       </div>
-
       <div class="modal-footer">
-        <small class="text-muted"
-          >Complete todos los campos requeridos antes de guardar.</small
-        >
+        <small class="text-muted">Complete todos los campos requeridos antes de guardar.</small>
       </div>
     </div>
   </div>
 </div>
-<div
-  id="modal_expediente"
-  class="modal fade"
-  tabindex="-1"
-  role="dialog"
-  aria-labelledby="modal_ver_expedienteLabel"
-  aria-hidden="true"
->
+<div id="modal_expediente" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="modal_ver_expedienteLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header bg-primary text-white">
         <h5 class="modal-title">Expediente</h5>
-        <button
-          type="button"
-          class="btn btn-close btn-light"
-          data-dismiss="modal"
-          aria-label="Cerrar"
-        >
-          Cerrar
-        </button>
+        <button type="button" class="btn btn-close btn-light" data-dismiss="modal" aria-label="Cerrar">Cerrar</button>
       </div>
       <div class="modal-body">
-        <!-- Combobox para seleccionar documento -->
-        <label for="selectDocument1" class="form-label"
-          >Seleccione un documento:</label
-        >
+        <label for="selectDocument1" class="form-label">Seleccione un documento:</label>
         <select id="selectDocumento1" class="form-select"></select>
-
-        <!-- Visualizador de PDF -->
         <div class="mt-3">
-          <iframe
-            id="visorDocumento1"
-            src=""
-            width="100%"
-            height="600px"
-            style="border: none"
-          ></iframe>
+          <iframe id="visorDocumento1" src="" width="100%" height="600px" style="border: none"></iframe>
         </div>
       </div>
     </div>
@@ -388,6 +184,7 @@
 
 <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'js/tabla.js' %}"></script>
 <script src="{% static 'lib/adminlte/plugins/datatables/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'lib/adminlte/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
 <script src="{% static 'lib/adminlte/plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
@@ -395,52 +192,19 @@
 <script src="{% static 'lib/adminlte/plugins/datatables-buttons/js/dataTables.buttons.min.js' %}"></script>
 <script src="{% static 'lib/adminlte/plugins/datatables-buttons/js/buttons.bootstrap4.min.js' %}"></script>
 <script>
-  $("#example1").DataTable({
-    language: {
-      decimal: "",
-      emptyTable: "No hay datos disponibles en la tabla",
-      info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-      infoEmpty: "Mostrando 0 a 0 de 0 entradas",
-      infoFiltered: "(filtrado de _MAX_ entradas totales)",
-      infoPostFix: "",
-      thousands: ",",
-      lengthMenu: "Mostrar _MENU_ entradas",
-      loadingRecords: "Cargando...",
-      processing: "Procesando...",
-      search: "Buscar:",
-      zeroRecords: "No se encontraron registros coincidentes",
-      paginate: {
-        first: "Primero",
-        last: "Último",
-        next: "Siguiente",
-        previous: "Anterior",
-      },
-      aria: {
-        sortAscending: ": activar para ordenar la columna ascendente",
-        sortDescending: ": activar para ordenar la columna descendente",
-      },
-    },
-  });
-
   function info_procesado(id) {
     fetch(`/expediente/${id}/`) // Vista Django que devuelve JSON con archivos
       .then((response) => response.json())
       .then((data) => {
         const select = document.getElementById("selectDocumento");
         const visor = document.getElementById("visorDocumento");
-
-        // Limpiar combobox
         select.innerHTML = "";
-
-        // Llenar combobox con documentos
         data.archivos.forEach((doc) => {
           let option = document.createElement("option");
           option.value = doc.url;
           option.textContent = doc.nombre;
           select.appendChild(option);
         });
-
-        // Mostrar el primero
         if (data.archivos.length > 0) {
           visor.src = data.archivos[0].url;
         }
@@ -451,35 +215,26 @@
         document.getElementById("itemId").value = data.id;
         document.querySelector('[name="fch_exp"]').value = data.fch_exp;
         document.querySelector('[name="fch_limite"]').value = data.fch_limite;
-        document.querySelector('[name="tp_prioridad"]').value =
-          data.tp_prioridad;
-        document.querySelector('[name="contenido_disp"]').value =
-          data.contenido;
-        document.querySelector('[name="procedencia_disp"]').value =
-          data.procedencia;
+        document.querySelector('[name="tp_prioridad"]').value =   data.tp_prioridad;
+        document.querySelector('[name="contenido_disp"]').value =  data.contenido;
+        document.querySelector('[name="procedencia_disp"]').value =  data.procedencia;
         document.querySelector('[name="disposicion"]').value = data.disposicion;
       });
   }
 
   function ver_expediente(procesamientoId) {
-    fetch(`/expediente/${procesamientoId}/`) // Vista Django que devuelve JSON con archivos
+    fetch(`/expediente/${procesamientoId}/`) 
       .then((response) => response.json())
       .then((data) => {
         const select = document.getElementById("selectDocumento");
         const visor = document.getElementById("visorDocumento");
-
-        // Limpiar combobox
         select.innerHTML = "";
-
-        // Llenar combobox con documentos
         data.archivos.forEach((doc) => {
           let option = document.createElement("option");
           option.value = doc.url;
           option.textContent = doc.nombre;
           select.appendChild(option);
         });
-
-        // Mostrar el primero
         if (data.archivos.length > 0) {
           visor.src = data.archivos[0].url;
         }
@@ -489,31 +244,19 @@
   document.addEventListener("DOMContentLoaded", function () {
     const selectDocumento = document.getElementById("selectDocumento");
     const visorDocumento = document.getElementById("visorDocumento");
-
-    // Mostrar el primero por defecto
     if (selectDocumento.options.length > 0) {
       visorDocumento.src = selectDocumento.value;
     }
-
-    // Cambiar el PDF al seleccionar otro
     selectDocumento.addEventListener("change", function () {
       visorDocumento.src = this.value;
     });
   });
   document.addEventListener("DOMContentLoaded", function () {
-    const selectDocumento = document.getElementById(
-      "selectDocumento_cumplimiento"
-    );
-    const visorDocumento = document.getElementById(
-      "visorDocumento_cumplimiento"
-    );
-
-    // Mostrar el primero por defecto
+    const selectDocumento = document.getElementById("selectDocumento_cumplimiento");
+    const visorDocumento = document.getElementById("visorDocumento_cumplimiento");
     if (selectDocumento.options.length > 0) {
       visorDocumento.src = selectDocumento.value;
     }
-
-    // Cambiar el PDF al seleccionar otro
     selectDocumento.addEventListener("change", function () {
       visorDocumento.src = this.value;
     });
@@ -527,7 +270,7 @@
           url: url,
           data: { procedencia_id: procedencia_id },
           success: function (data) {
-            $("#sub_procedencia").empty(); // Limpiar el combobox de modelos
+            $("#sub_procedencia").empty(); 
             $("#sub_procedencia").append(
               '<option value="" selected >Selecciona una procedencia</option>'
             );
@@ -560,23 +303,16 @@
       .then((data) => {
         document.querySelector('[name="cumplimiento"]').value =
           data.cumplimiento || "";
-
         const select = document.getElementById("selectDocumento_cumplimiento");
         const visor = document.getElementById("visorDocumento_cumplimiento");
         const visorContainer = visor.parentElement;
-
-        // Limpiar combobox
         select.innerHTML = "";
-
-        // Llenar combobox con documentos
         data.archivos.forEach((doc) => {
           let option = document.createElement("option");
           option.value = doc.url;
           option.textContent = doc.nombre;
           select.appendChild(option);
         });
-
-        // Mostrar el primero
         if (data.archivos.length > 0) {
           visor.src = data.archivos[0].url;
         } else {
@@ -593,13 +329,10 @@
     const select = document.getElementById("sub_procedencia");
     const lista = document.getElementById("listaDestinatarios");
     const inputHidden = document.getElementById("destinatariosInput");
-
     const id = select.value;
     const nombre = select.options[select.selectedIndex].text;
-
     if (id && !destinatariosSeleccionados.includes(id)) {
       destinatariosSeleccionados.push(id);
-
       const li = document.createElement("li");
       li.classList.add(
         "list-group-item",
@@ -608,7 +341,6 @@
         "align-items-center"
       );
       li.textContent = nombre;
-
       const btnEliminar = document.createElement("button");
       btnEliminar.classList.add("btn", "btn-danger", "btn-sm");
       btnEliminar.innerHTML = "<i class='fas fa-trash'></i>";
@@ -619,11 +351,8 @@
         li.remove();
         inputHidden.value = destinatariosSeleccionados.join(",");
       };
-
       li.appendChild(btnEliminar);
       lista.appendChild(li);
-
-      // Actualizar input hidden
       inputHidden.value = JSON.stringify(
         destinatariosSeleccionados.map((id) => ({ sub_procedencia: id }))
       );
@@ -631,9 +360,7 @@
   }
   function registrar_disposicion(event) {
     event.preventDefault();
-
     let formData = new FormData(document.getElementById("formRegistroCME"));
-
     fetch("/registrar_cumplimiento/", {
       method: "POST",
       body: formData,
@@ -657,28 +384,21 @@
     let fileInput = document.getElementById("fileInput");
     let dropzone = document.getElementById("dropzone");
     let fileList = document.getElementById("fileList");
-    let selectedFiles = new DataTransfer(); // 📌 Para manejar archivos correctamente
-
-    // 📌 Detectar archivos desde el input
+    let selectedFiles = new DataTransfer(); 
     fileInput.addEventListener("change", function (event) {
       handleFiles(event.target.files);
     });
-
-    // 📌 Manejar archivos cuando se arrastran al área
     dropzone.addEventListener("drop", function (event) {
       event.preventDefault();
       handleFiles(event.dataTransfer.files);
     });
-
     dropzone.addEventListener("dragover", function (event) {
       event.preventDefault();
     });
-
-    // 📌 Función para manejar los archivos seleccionados
     function handleFiles(files) {
       for (let file of files) {
         if (!fileExists(file)) {
-          selectedFiles.items.add(file); // Agrega el archivo a la lista de DataTransfer
+          selectedFiles.items.add(file); 
           let listItem = document.createElement("li");
           listItem.className =
             "d-flex justify-content-between align-items-center p-2 border rounded mt-1";
@@ -688,7 +408,7 @@
           fileList.appendChild(listItem);
         }
       }
-      fileInput.files = selectedFiles.files; // Actualiza los archivos en el input
+      fileInput.files = selectedFiles.files; 
     }
     function fileExists(file) {
       for (let i = 0; i < selectedFiles.files.length; i++) {
@@ -705,7 +425,7 @@
           break;
         }
       }
-      fileInput.files = selectedFiles.files; // Actualiza los archivos en el input
+      fileInput.files = selectedFiles.files; 
       updateFileList();
     };
     function updateFileList() {

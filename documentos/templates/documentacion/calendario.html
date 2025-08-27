@@ -1,0 +1,104 @@
+{% extends '../core/base.html' %} {% load static %} {% block 'contenido' %}
+<link rel="stylesheet" href="{% static 'lib/adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}"/>
+<link rel="stylesheet" href="{% static 'lib/adminlte/plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}"/>
+<link rel="stylesheet" href="{% static 'lib/adminlte/plugins/datatables-buttons/css/buttons.bootstrap4.min.css' %}"/>
+<link rel="stylesheet" href="{% static 'css/estilo_alerta.css' %}"/>
+  <link rel="stylesheet" href="{% static 'lib/adminlte/plugins/fullcalendar/main.css' %}">
+  <link rel="stylesheet" href="{% static 'lib/adminlte/plugins/dist/css/adminlte.min.css' %}">
+<section class="content-header">
+</section>
+<section class="content">
+  {% csrf_token %}
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Calendario</h3>
+            <div class="card-tools"></div>
+          </div>
+          <div class="card-body">
+            <div id="calendar"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-buttons/js/buttons.bootstrap4.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/jquery/jquery.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/moment/moment.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/fullcalendar/main.js' %}"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    var calendarEl = document.getElementById('calendar');
+
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'dayGridMonth',
+      locale: 'es',
+      themeSystem: 'bootstrap',
+      height: 'auto',
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
+      },
+      buttonText: {
+        today: 'Hoy',
+        month: 'Mes',
+        week: 'Semana',
+        day: 'Día',
+        list: 'Lista'
+      },
+      events: '/api/eventos/',
+      eventDidMount: function(info) {
+        // Tooltip con Bootstrap
+        var tooltip = new bootstrap.Tooltip(info.el, {
+          title: info.event.extendedProps.asunto || 'Sin asunto',
+          placement: 'top',
+          trigger: 'hover',
+          container: 'body'
+        });
+      },
+      eventClick: function(info) {
+        // Modal en lugar de alert
+        var evento = info.event;
+        var contenidoModal = `
+          <div class="modal fade" id="eventoModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                  <h5 class="modal-title">${evento.extendedProps.tipo_doc}</h5>
+                    <button type="button" class="btn btn-close btn-light" data-dismiss="modal" aria-label="Cerrar">
+                        Cerrar
+                     </button>
+                </div>
+                <div class="modal-body">
+                <p><strong>Fecha límite:</strong> ${evento.start.toLocaleString()}</p>
+                <p><strong>Procedencia:</strong> ${evento.extendedProps.procedencia || 'No disponible'}</p>
+                <p><strong>Contenido:</strong> ${evento.extendedProps.contenido || 'No disponible'}</p>
+                <p><strong>Disposición:</strong> ${evento.extendedProps.disposicion|| 'No disponible'}}</p>                   
+                </div>
+              </div>
+            </div>
+          </div>`;
+        
+        document.body.insertAdjacentHTML('beforeend', contenidoModal);
+        var modal = new bootstrap.Modal(document.getElementById('eventoModal'));
+        modal.show();
+        document.getElementById('eventoModal').addEventListener('hidden.bs.modal', function () {
+          document.getElementById('eventoModal').remove();
+        });
+      }
+    });
+
+    calendar.render();
+  });
+</script>
+
+{% endblock %}
