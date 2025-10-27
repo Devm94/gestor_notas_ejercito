@@ -618,3 +618,6 @@ def api_eventos(request):
 
 def calendario(request):
     return render(request, "documentacion/calendario.html")
+
+def reporte_mensual(request):
+    return render(request, "documentacion/reportes/mensual.html")
