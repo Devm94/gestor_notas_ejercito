@@ -14,9 +14,15 @@ from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer, Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 import io
+import openpyxl
 from django.http import FileResponse
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+from django.utils.dateparse import parse_date
 
 from django.contrib.auth import logout
+
+
 @login_required
 def inicio(request):
     return render(request, 'index.html')
@@ -620,4 +626,76 @@ def calendario(request):
     return render(request, "documentacion/calendario.html")
 
 def reporte_mensual(request):
-    return render(request, "documentacion/reportes/mensual.html")
+    fecha_desde = request.GET.get('fecha_desde')
+    fecha_hasta = request.GET.get('fecha_hasta')
+
+    notas = None  # No mostrar nada por defecto
+
+    # Solo filtrar si el usuario envió ambos campos de fecha
+    if fecha_desde and fecha_hasta:
+        try:
+            desde = datetime.strptime(fecha_desde, '%Y-%m-%d')
+            hasta = datetime.strptime(fecha_hasta, '%Y-%m-%d')
+            notas = procesamiento_nota.objects.filter(fch_exp__range=[desde, hasta])
+        except ValueError:
+            notas = None  # Si las fechas no son válidas, no mostrar nada
+
+    context = {
+        'notas': notas,
+        'fecha_desde': fecha_desde,
+        'fecha_hasta': fecha_hasta,
+    }
+    return render(request, 'documentacion/reportes/mensual.html', context)
+
+def exportar_pdf(request):
+    desde = request.GET.get('desde')
+    hasta = request.GET.get('hasta')
+    notas = procesamiento_nota.objects.all()
+
+    if desde and hasta:
+        notas = notas.filter(fch_exp__date__range=[desde, hasta])
+
+    template_path = 'reporte_pdf.html'  # crea esta plantilla (puede ser simple)
+    context = {'notas': notas, 'desde': desde, 'hasta': hasta}
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'inline; filename="reporte_notas.pdf"'
+    template = get_template(template_path)
+    html = template.render(context)
+
+    pisa.CreatePDF(html, dest=response)
+    return response
+
+def exportar_excel(request):
+    desde = request.GET.get('desde')
+    hasta = request.GET.get('hasta')
+    notas = procesamiento_nota.objects.all()
+
+    if desde and hasta:
+        notas = notas.filter(fch_exp__date__range=[desde, hasta])
+
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    sheet.title = 'Notas'
+
+    # Encabezados
+    headers = ['No.', 'Fecha', 'Registro', 'Procedencia', 'Contenido', 'Disposición', 'Observación']
+    sheet.append(headers)
+
+    for i, nota in enumerate(notas, start=1):
+        sheet.append([
+            i,
+            nota.fch_exp.strftime('%Y-%m-%d'),
+            nota.cod_nota.no_exp,
+            nota.cod_nota.cod_procedencia.descrip_larga,
+            nota.contenido,
+            nota.disposicion,
+            nota.cod_estado_cumplimiento if hasattr(nota, 'cod_estado_cumplimiento') else ''
+        ])
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename="reporte_notas.xlsx"'
+    workbook.save(response)
+    return response

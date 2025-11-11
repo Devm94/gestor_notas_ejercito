@@ -9,9 +9,35 @@
     </li>
   </ul>
   <ul class="navbar-nav ml-auto">
+    <li class="nav-item dropdown">
+      <a class="nav-link" data-toggle="dropdown" href="#" aria-expanded="false">
+        <i class="far fa-bell"></i>
+        <span class="badge badge-warning navbar-badge" id="noti-count"
+          >{{noti_count}}</span
+        >
+      </a>
+      <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+        <span class="dropdown-header" id="noti-header">Notificaciones</span>
+        <div class="dropdown-divider"></div>
+        <div id="noti-list">
+          {% if notificaciones %} {% for n in notificaciones %}
+          <a href="{{ n.link }}" class="dropdown-item"> {{ n.cod_nota.cod_procedencia }} </a>
+          {% endfor %} {% else %}
+          <a href="#" class="dropdown-item">No hay notificaciones</a>
+          {% endif %}
+        </div>
+        <div class="dropdown-divider"></div>
+        <a
+          href="{% url 'aprobacion' %}"
+          class="dropdown-item dropdown-footer"
+          >Ver todas</a
+        >
+      </div>
+    </li>
+
     <li class="nav-item">
       <span class="nav-link">
-        {{ request.user.first_name }} {{ request.user.last_name }}
+        {{usuario}}
       </span>
     </li>
   </ul>

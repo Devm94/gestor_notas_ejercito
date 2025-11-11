@@ -65,6 +65,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'documentos.context_processors.notificaciones_usuario',
             ],
         },
     },
@@ -76,13 +77,25 @@ WSGI_APPLICATION = 'gestor_notas.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'gestor_notas',     # 👉 nombre de la base que creaste en MySQL
+        'USER': 'ite6',                  # 👉 usuario MySQL
+        'PASSWORD': 'T3cn0l0g1413+',     # 👉 contraseña MySQL
+        'HOST': '172.22.4.20',           # 👉 IP del servidor MySQL (usa localhost si está en el mismo servidor)
+        'PORT': '3306',                  # 👉 puerto MySQL por defecto
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+        },
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators

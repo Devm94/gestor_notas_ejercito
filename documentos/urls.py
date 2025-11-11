@@ -41,4 +41,6 @@ urlpatterns = [
     path('api/eventos/', views.api_eventos, name='api_eventos'),
     path("calendario/", views.calendario, name="calendario"),
     path("reporte_mensual/", views.reporte_mensual, name="reporte_mensual"),
+    path('reporte/exportar_pdf/', views.exportar_pdf, name='exportar_pdf'),
+    path('reporte/exportar_excel/', views.exportar_excel, name='exportar_excel'),
     ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body { font-family: DejaVu Sans, sans-serif; font-size: 12px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #000; padding: 4px; text-align: left; }
+    th { background-color: #f0f0f0; }
+  </style>
+</head>
+<body>
+  <h2>Reporte de Notas</h2>
+  <p>Desde: {{ desde }} — Hasta: {{ hasta }}</p>
+  <table>
+    <tr>
+      <th>No.</th>
+      <th>Fecha</th>
+      <th>Registro</th>
+      <th>Procedencia</th>
+      <th>Contenido</th>
+      <th>Disposición</th>
+      <th>Observación</th>
+    </tr>
+    {% for nota in notas %}
+    <tr>
+      <td>{{ forloop.counter }}</td>
+      <td>{{ nota.fch_exp|date:"Y-m-d" }}</td>
+      <td>{{ nota.cod_nota.cod_nota.no_exp }}</td>
+      <td>{{ nota.cod_nota.cod_nota.cod_procedencia }}</td>
+      <td>{{ nota.contenido }}</td>
+      <td>{{ nota.disposicion }}</td>
+      <td>{{ nota.cod_estado_cumplimiento }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</body>
+</html>
