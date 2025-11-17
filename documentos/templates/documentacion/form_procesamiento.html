@@ -208,6 +208,26 @@
         </button>
       </div>
       <div class="modal-body">
+       <form id="formCumplimiento" method="POST" action="{% url 'actualizar_estado_nota' %}" class="mb-3">
+          {% csrf_token %}
+          <input type="hidden" id="nota_id_2" name="nota_id_2">
+
+          <div class="row align-items-end g-2">
+            <div class="col-md-6">
+              <label for="estado" class="form-label fw-bold">Estado de la Nota:</label>
+              <select id="estado" name="estado" class="form-select" required>
+                <option value="0">Seleccione una opción</option>
+                <option value="1">Pendiente</option>
+                <option value="2">Realizado</option>
+              </select>
+            </div>
+            <div class="col-md-6 text-end">
+              <button type="submit" class="btn btn-success mt-3 mt-md-0">
+                <i class="fas fa-check-circle me-1"></i> Guardar Estado
+              </button>
+            </div>
+          </div>
+        </form>
         <div id="listaRequerimientos"></div>
       </div>
     </div>
@@ -386,6 +406,7 @@
       });
   }
 function ver_cumplimiento(cumplimiento_id) {
+    document.getElementById('nota_id_2').value = cumplimiento_id;
     fetch(`/ver_cumplimiento_nota_proc/${cumplimiento_id}/`) // Vista Django que devuelve JSON con archivos
       .then((response) => response.json())
       .then((data) => {

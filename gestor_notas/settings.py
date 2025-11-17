@@ -134,12 +134,12 @@ USE_TZ = True
 STATIC_URL = 'static/'
 MEDIA_URL = '/notas_arch/'  # URL de acceso a los archivos cargados
 MEDIA_ROOT = os.path.join(BASE_DIR, 'notas_arch')
-# settings.py
-STATIC_ROOT = '/opt/gestor_notas/gestor_notas_ejercito/static/'
-MEDIA_ROOT = '/opt/gestor_notas/gestor_notas_ejercito/media/'
 
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
+#descomentar
+#STATIC_ROOT = '/opt/gestor_notas/gestor_notas_ejercito/static/'  
+#MEDIA_ROOT = '/opt/gestor_notas/archivos/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

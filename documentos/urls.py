@@ -43,4 +43,5 @@ urlpatterns = [
     path("reporte_mensual/", views.reporte_mensual, name="reporte_mensual"),
     path('reporte/exportar_pdf/', views.exportar_pdf, name='exportar_pdf'),
     path('reporte/exportar_excel/', views.exportar_excel, name='exportar_excel'),
+    path("actualizar_estado_nota/", views.actualizar_estado_nota, name="actualizar_estado_nota"),
     ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

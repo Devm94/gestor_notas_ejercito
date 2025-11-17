@@ -21,7 +21,7 @@
         <div class="dropdown-divider"></div>
         <div id="noti-list">
           {% if notificaciones %} {% for n in notificaciones %}
-          <a href="{{ n.link }}" class="dropdown-item"> {{ n.cod_nota.cod_procedencia }} </a>
+          <a href="{{ n.link }}" class="dropdown-item"> {{ n.cod_nota.cod_procedencia }} - {{ n.fch_limite_formateada }} </a>
           {% endfor %} {% else %}
           <a href="#" class="dropdown-item">No hay notificaciones</a>
           {% endif %}

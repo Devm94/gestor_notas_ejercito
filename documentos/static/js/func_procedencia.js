@@ -3,7 +3,7 @@ $(document).ready(function () {
     $("#disp_procedencia_sup").change(function () {
       var procedencia_id = $(this).val();
       var url = loadSubProcedenciasUrl;
-      alert("entro");
+
       if (procedencia_id) {
         $.ajax({
           url: url,

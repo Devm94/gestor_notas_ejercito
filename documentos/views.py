@@ -1,4 +1,5 @@
 import json
+from pyexpat.errors import messages
 from django.shortcuts import render
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponse
@@ -699,3 +700,21 @@ def exportar_excel(request):
     response['Content-Disposition'] = 'attachment; filename="reporte_notas.xlsx"'
     workbook.save(response)
     return response
+
+def actualizar_estado_nota(request):
+    print("hola")
+    if request.method == "POST":
+        print("hola2")
+        nota_id_2 = request.POST.get('nota_id_2')
+        print(nota_id_2)
+        nota = preregistro_nota.objects.get(id=nota_id_2)
+        print(nota)
+        estado_cumplido = estado_preregistro.objects.get(id=7)
+        nota.cod_estado_preregistro = estado_cumplido
+        nota.save()
+        estado_realizada = estado_cumplimiento.objects.get(id=2)
+        relacionados = notaxprocedencia.objects.filter(cod_nota__cod_nota=nota)
+        for r in relacionados:
+            r.cod_estado_cumplimiento = estado_realizada
+            r.save()
+        return redirect(form_procesamiento)
