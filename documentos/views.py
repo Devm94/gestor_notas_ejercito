@@ -78,10 +78,12 @@ def form_recepcion(request):
 @login_required
 def form_procesamiento(request):
     ls_tp_prioridad = tp_prioridad.objects.all()
-    ls_preregistro_notas = preregistro_nota.objects.order_by("cod_estado_preregistro").all()
+    ls_preregistro_notas = preregistro_nota.objects.filter(cod_estado_preregistro = estado_preregistro.objects.get(id = 1)).order_by("cod_estado_preregistro").all()
+    ls_procesadas_notas = procesamiento_nota.objects.order_by("-fch_procesamiento").all()
     v_tp_documentacion = tp_documentacion.objects.all()
     ls_procedencia = procedencia.objects.filter(cod_proced_superior__isnull=True)
     context = {'ls_preregistro_notas' : ls_preregistro_notas,
+               'ls_procesadas_notas' : ls_procesadas_notas, 
                'ls_tp_prioridad' : ls_tp_prioridad,
                'v_tp_documentacion' : v_tp_documentacion,
                'ls_procedencia' : ls_procedencia ,}

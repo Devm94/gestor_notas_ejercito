@@ -26,47 +26,100 @@
                   <th>Estado</th>
                   <th>Responsable</th>
                   <th>Acciones</th>
+                  <th style="display:none;">Contenido</th>
                 </tr>
               </thead>
               <tbody>
-                {% for ls_preregistro_notas in ls_preregistro_notas %}
-                <tr {% if ls_preregistro_notas.cod_estado_preregistro.id == 1 %} style="background-color: #fff3cd; font-weight: bold;" {% endif %}>
-                  <td>{{ forloop.counter }}</td>
-                  <td>{{ ls_preregistro_notas.fch_rcp_formateada }}</td>
-                  <td>{{ls_preregistro_notas.cod_procedencia }}</td>
-                  <td>{{ls_preregistro_notas.no_exp}}</td>
-                  <td {% if ls_preregistro_notas.cod_estado_preregistro.id == 1 %} style="background-color: #fff3cd; font-weight: bold;" {% endif %}>
-                      {{ ls_preregistro_notas.cod_estado_preregistro }}
-                  </td>
-                  <td>{{ls_preregistro_notas.cod_usuario}}</td>
-                  <td>
-                    <div class="dropdown">
-                      <button class="btn btn-outline-primary btn-sm btn-block dropdown-toggle" type="button" id="accionesCentro{{ cme.id }}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        Acciones
-                      </button>
-                      <div class="dropdown-menu" aria-labelledby="accionesCentro{{ notas_procesadas.id }}">            
-                        {% if ls_preregistro_notas.cod_estado_preregistro.id == 1  %}
-                        <a class="dropdown-item text-info" href="#" data-toggle="modal" data-target="#modalAgregar" onclick="procesar({{ls_preregistro_notas.id }})">
-                          Procesar
-                        </a>
-                        {% endif %} 
-                        {% if ls_preregistro_notas.cod_estado_preregistro.id >= 2  %}
-                        <a class="dropdown-item text-info" href="#" data-toggle="modal" data-target="#modalrevisar" onclick="revisar({{ls_preregistro_notas.id }})">
-                          Revisar
-                        </a>
-                        <a class="dropdown-item text-info" href="#" data-toggle="modal" data-target="#modal_expediente" onclick="ver_cumplimiento({{ls_preregistro_notas.id }})">
-                          Cumplimiento
-                        </a>
-                        <a class="dropdown-item text-success" href="#" data-toggle="modal" data-target="#modal_info_aprobado" onclick="llenarItemId({{ ls_preregistro_notas.id  }})" >
-                          Disposición
-                        </a>
-                        <a class="dropdown-item text-info" href="{% url 'imprimir_nota_proc' ls_preregistro_notas.id %}" target="_blank"> Imprimir </a>                      
-                        {% endif %} 
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-                {% endfor %}
+{% for nota in ls_preregistro_notas %}
+<tr {% if nota.cod_estado_preregistro.id == 1 %} style="background-color: #fff3cd; font-weight: bold;" {% endif %}>
+  <td>{{ forloop.counter }}</td>
+  <td>{{ nota.fch_rcp_formateada }}</td>
+  <td>{{ nota.cod_procedencia }}</td>
+  <td>{{ nota.no_exp }}</td>
+
+  <td style="display:none;">{{ nota.contenido }}</td>
+
+  <td {% if nota.cod_estado_preregistro.id == 1 %} style="background-color: #fff3cd; font-weight: bold;" {% endif %}>{{ nota.cod_estado_preregistro }}</td>
+      
+  
+
+  <td>{{ nota.cod_usuario }}</td>
+
+  <td>
+    <div class="dropdown">
+      <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-toggle="dropdown">
+        Acciones
+      </button>
+
+      <div class="dropdown-menu">
+        {% if nota.cod_estado_preregistro.id == 1 %}
+        <a class="dropdown-item text-info" href="#" data-toggle="modal" data-target="#modalAgregar"
+           onclick="procesar({{ nota.id }})">Procesar</a>
+        {% endif %}
+
+        {% if nota.cod_estado_preregistro.id >= 2 %}
+        <a class="dropdown-item text-info" href="#" data-toggle="modal" data-target="#modalrevisar"
+           onclick="revisar({{ nota.id }})">Revisar</a>
+
+        <a class="dropdown-item text-info" href="#" data-toggle="modal" data-target="#modal_expediente"
+           onclick="ver_cumplimiento({{ nota.id }})">Cumplimiento</a>
+
+        <a class="dropdown-item text-success" href="#" data-toggle="modal" data-target="#modal_info_aprobado"
+           onclick="llenarItemId({{ nota.id }})">Disposición</a>
+
+        <a class="dropdown-item text-info" href="{% url 'imprimir_nota_proc' nota.id %}" target="_blank">
+          Imprimir
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </td>
+</tr>
+{% endfor %}
+{% with total1=ls_preregistro_notas|length %}
+{% for proc in ls_procesadas_notas %}
+<tr>
+  <td>{{ total1|add:forloop.counter }}</td>
+  <td>{{ proc.cod_nota.fch_rcp_formateada }}</td>
+  <td>{{ proc.cod_nota.cod_procedencia }}</td>
+  <td>{{ proc.cod_nota.no_exp }}</td>
+
+  <td style="display:none;">{{ proc.contenido }}</td>
+
+  <td>
+    {{ proc.cod_nota.cod_estado_preregistro }}
+  </td>
+
+  <td>{{ proc.cod_nota.cod_usuario }}</td>
+
+  <td>
+    <div class="dropdown">
+      <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-toggle="dropdown">
+        Acciones
+      </button>
+
+      <div class="dropdown-menu">
+
+        {% if proc.cod_nota.cod_estado_preregistro.id >= 2 %}
+        <a class="dropdown-item text-info" href="#" data-toggle="modal" data-target="#modalrevisar"
+           onclick="revisar({{ proc.cod_nota.id }})">Revisar</a>
+
+        <a class="dropdown-item text-info" href="#" data-toggle="modal" data-target="#modal_expediente"
+           onclick="ver_cumplimiento({{ proc.cod_nota.id }})">Cumplimiento</a>
+
+        <a class="dropdown-item text-success" href="#" data-toggle="modal" data-target="#modal_info_aprobado"
+           onclick="llenarItemId({{ proc.cod_nota.id }})">Disposición</a>
+
+        <a class="dropdown-item text-info" href="{% url 'imprimir_nota_proc' proc.cod_nota.id %}" target="_blank">
+          Imprimir
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </td>
+</tr>
+{% endfor %}
+{% endwith %}
               </tbody>
             </table>
           </div>
@@ -325,6 +378,7 @@
 <script src="{% static 'lib/adminlte/plugins/datatables-buttons/js/dataTables.buttons.min.js' %}"></script>
 <script src="{% static 'lib/adminlte/plugins/datatables-buttons/js/buttons.bootstrap4.min.js' %}"></script>
 <script>
+
   const div_adj_disp = document.getElementById("div_adj_disp");
   const div_vis_disp = document.getElementById("div_visor_dispo");
     var fileInput_Completar = "fileInput";

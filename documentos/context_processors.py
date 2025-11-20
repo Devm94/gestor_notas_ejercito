@@ -3,6 +3,7 @@ from documentos.models import estado_preregistro, preregistro_nota, usuario, pro
 
 
 def notificaciones_usuario(request):
+    Mantenimiento = True
     if request.user.is_authenticated:
         log_user = usuario.objects.get(cod_user=request.user)
         nom_completo = log_user.cod_user.first_name + " " + log_user.cod_user.last_name
@@ -21,6 +22,6 @@ def notificaciones_usuario(request):
         'notificaciones': notificaciones,
         'noti_count': noti_count,
         'usuario' : log_user,
+        'Mantenimiento' : Mantenimiento,
     }
-
 

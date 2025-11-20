@@ -1,5 +1,6 @@
   jQuery(document).ready(function ($) {
     $("#example1").DataTable({
+      ordering: false, 
       language: {
         decimal: "",
         emptyTable: "No hay datos disponibles en la tabla",
