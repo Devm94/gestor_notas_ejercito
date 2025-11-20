@@ -30,12 +30,14 @@
               </thead>
               <tbody>
                 {% for ls_preregistro_notas in ls_preregistro_notas %}
-                <tr>
+                <tr {% if ls_preregistro_notas.cod_estado_preregistro.id == 1 %} style="background-color: #fff3cd; font-weight: bold;" {% endif %}>
                   <td>{{ forloop.counter }}</td>
                   <td>{{ ls_preregistro_notas.fch_rcp_formateada }}</td>
                   <td>{{ls_preregistro_notas.cod_procedencia }}</td>
                   <td>{{ls_preregistro_notas.no_exp}}</td>
-                  <td>{{ls_preregistro_notas.cod_estado_preregistro}}</td>
+                  <td {% if ls_preregistro_notas.cod_estado_preregistro.id == 1 %} style="background-color: #fff3cd; font-weight: bold;" {% endif %}>
+                      {{ ls_preregistro_notas.cod_estado_preregistro }}
+                  </td>
                   <td>{{ls_preregistro_notas.cod_usuario}}</td>
                   <td>
                     <div class="dropdown">

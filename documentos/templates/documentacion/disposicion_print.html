@@ -102,20 +102,25 @@
             <tr>
                 <td class="form-header" style="width: 30%">FECHA:{{ nota.fch_exp_formateada}}</td>
                 <td class="form-header" style="width: 40%">REGISTRO: {{ nota.cod_nota.no_exp}}</td>
-                <td class="form-header" style="width: 30%">CLASIFICACION:{{ nota.tp_prioridad}}</td>
+                <td 
+                    class="form-header" 
+                    style="width: 30%; 
+                    {% if nota.tp_prioridad.descrip_corta == 'Urgente' %}background-color: #ca4646ff; color: rgba(10, 10, 10, 1); font-weight: bold;{% endif %}">
+                    CLASIFICACIÓN: {{ nota.tp_prioridad }}
+                </td>
             </tr>
             <tr>
                 <td style="background-color:{{ nota.cod_nota.cod_procedencia.cod_proced_superior.color}};!important" colspan="3" class="form-header">PROCEDENCIA:{{ nota.cod_nota.cod_procedencia}}</td>
             </tr>
             <tr>
-                <td colspan="3" class="form-header">CONTENIDO: <br>{{ nota.contenido}}</td>
+                <td colspan="3" class="form-header" style="text-align: justify;">CONTENIDO: <br>{{ nota.contenido}}</td>
             </tr>
             <tr>
-                <td colspan="3" class="form-header content-cell">DISPOSICION <br></td>
+                <td colspan="3" class="form-header content-cell">DISPOSICIÓN <br></td>
             </tr>
             <tr>
                 <td colspan="1" class="form-header">FECHA LIMITE: <br>{{ nota.fch_limite_formateada}}</td>
-                <td colspan="2" class="form-header" style="text-align: center;">GENERAL DE BRIGADA<br><br><br>HECTOR BENJAMIN VALERIO ARDON<br>COMANDANTE GENERAL DEL EJÉRCITO<br>EHO-2582</td>
+                <td colspan="2" class="form-header" style="text-align: center;">GENERAL DE BRIGADA<br><br><br>HÉCTOR BENJAMÍN VALERIO ARDÓN<br>COMANDANTE GENERAL DEL EJÉRCITO<br>EHO-2582</td>
             </tr>
         </table>
         <button class="print-button no-print" onclick="window.print()">Imprimir Formulario</button>
