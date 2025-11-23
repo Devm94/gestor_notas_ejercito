@@ -88,12 +88,14 @@ class estado_preregistro(models.Model):
    
 class preregistro_nota(models.Model):
     id = models.AutoField(primary_key=True)
+    registro = models.CharField(max_length=20, blank=True, null=True)
     no_exp = models.TextField()
     fch_rcp = models.DateTimeField(auto_now_add=True)#fecha de recepcion de la nota.
     cod_procedencia = models.ForeignKey(procedencia, on_delete=models.CASCADE)
     cod_medio = models.ForeignKey(tp_medio, on_delete=models.CASCADE,null=True)
     cod_usuario = models.ForeignKey(User, on_delete=models.CASCADE)
     cod_estado_preregistro = models.ForeignKey(estado_preregistro, on_delete=models.CASCADE, null = True)
+
     def formato_fecha(self, fecha):
         if fecha:
             dia = fecha.strftime('%d')
@@ -103,6 +105,42 @@ class preregistro_nota(models.Model):
             return f"{dia}{hora}{mes_abrev}{año}"
         return "N/A"
 
+    def save(self, *args, **kwargs):
+        if not self.registro:
+            
+            procedencia = self.cod_procedencia
+            
+            es_ejercito = (
+                procedencia and procedencia.descrip_corta.upper() == "EJÉRCITO"
+            ) or (
+                procedencia and procedencia.cod_proced_superior
+                and procedencia.cod_proced_superior.descrip_corta.upper() == "EJÉRCITO"
+            )
+            
+            if es_ejercito:
+                prefijo = "E-"
+            else:
+                prefijo = "C-"
+
+            registros_con_prefijo = preregistro_nota.objects.filter(
+                registro__startswith=prefijo
+            )
+            
+            max_num = 0
+            
+            for registro_nota in registros_con_prefijo:
+                try:
+                    num_str = registro_nota.registro.split(prefijo)[1]
+                    num = int(num_str)
+                    if num > max_num:
+                        max_num = num
+                except (ValueError, IndexError):
+                    continue
+            
+            nuevo_num = max_num + 1
+            self.registro = f"{prefijo}{nuevo_num}"
+        
+        super().save(*args, **kwargs)
     def fch_rcp_formateada(self):
         return self.formato_fecha(self.fch_rcp)
     class Meta:
@@ -315,3 +353,31 @@ class nota_disp_arch(models.Model):
         if self.arch:
             self.nombre_archivo = os.path.basename(self.arch.name) 
             super().save(*args, **kwargs)
+
+
+class Anuncio(models.Model):
+    TIPO_CHOICES = [
+        ('info', 'Información'),
+        ('alerta', 'Alerta'),
+        ('mantenimiento', 'Mantenimiento'),
+    ]
+
+    titulo = models.CharField(max_length=200)
+    mensaje = models.TextField()
+    observacion = models.TextField(null=True)
+    
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='info')
+    activo = models.BooleanField(default=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    ICONOS = {
+        'info': 'fas fa-info-circle text-info',
+        'alerta': 'fas fa-exclamation-triangle text-danger',
+        'mantenimiento': 'fas fa-tools text-warning',
+    }
+
+    def icono(self):
+        return self.ICONOS.get(self.tipo, 'fas fa-info-circle')
+
+    def __str__(self):
+        return self.titulo

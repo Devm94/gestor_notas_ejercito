@@ -1,27 +1,17 @@
 import json
-from pyexpat.errors import messages
 from django.shortcuts import render
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponse
-import pandas as pd
 from .models import *
 from django.utils.timezone import make_aware
 from datetime import datetime
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from reportlab.lib import colors
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer, Paragraph
-from reportlab.lib.styles import getSampleStyleSheet
-import io
 import openpyxl
-from django.http import FileResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
-from django.utils.dateparse import parse_date
-
 from django.contrib.auth import logout
+from django.db import transaction
 
 
 @login_required
@@ -297,12 +287,11 @@ def registrar_cumplimiento(request):
 
 @login_required
 def cumplimiento_json(request, cumplimiento_id):
-    print(cumplimiento_id)
+
     procesamiento = notaxprocedencia.objects.get(id=cumplimiento_id)
     archivos = evidencia_cumpli_nota_arch.objects.filter(cod_nota=procesamiento)
     cumplimiento =  procesamiento.Observacion
-    print(archivos)
-    print(cumplimiento)
+
     data = {
         "archivos": [
             {"nombre": a.nombre_archivo, "url": a.arch.url}
@@ -720,3 +709,28 @@ def actualizar_estado_nota(request):
             r.cod_estado_cumplimiento = estado_realizada
             r.save()
         return redirect(form_procesamiento)
+    
+    
+def fix_registros(request):
+    contador_e = 0
+    contador_c = 0
+    total_actualizado = 0
+    with transaction.atomic():
+        notas = preregistro_nota.objects.all().order_by('id')
+        for nota in notas:
+            procedencia = nota.cod_procedencia
+            es_ejercito = (procedencia.descrip_corta.upper() == "EJÉRCITO") or (
+                procedencia.cod_proced_superior
+                and procedencia.cod_proced_superior.descrip_corta.upper() == "EJÉRCITO"
+            )
+            if es_ejercito:
+                contador_e += 1
+                prefijo = "E-"
+                nota.registro = f"{prefijo}{contador_e}"
+            else:
+                contador_c += 1
+                prefijo = "C-"
+                nota.registro = f"{prefijo}{contador_c}"
+            nota.save()
+            total_actualizado += 1
+    return HttpResponse(f"Registros ACTUALIZADOS: {total_actualizado} (Ejército: {contador_e}, Común: {contador_c})")

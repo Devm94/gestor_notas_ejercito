@@ -90,9 +90,6 @@
             border-left: 4px solid #2196F3;
         }
         }
-
-
-        
     </style>
 </head>
 <body>
@@ -101,7 +98,8 @@
         <table class="form-table">
             <tr>
                 <td class="form-header" style="width: 30%">FECHA:{{ nota.fch_exp_formateada}}</td>
-                <td class="form-header" style="width: 40%">REGISTRO: {{ nota.cod_nota.no_exp}}</td>
+                <td class="form-header" style="width: 40%">REGISTRO: {{ nota.cod_nota.registro}}</td>
+                
                 <td 
                     class="form-header" 
                     style="width: 30%; 
@@ -110,7 +108,8 @@
                 </td>
             </tr>
             <tr>
-                <td style="background-color:{{ nota.cod_nota.cod_procedencia.cod_proced_superior.color}};!important" colspan="3" class="form-header">PROCEDENCIA:{{ nota.cod_nota.cod_procedencia}}</td>
+                <td style="background-color:{{ nota.cod_nota.cod_procedencia.cod_proced_superior.color}};!important" colspan="1" class="form-header">PROCEDENCIA:   </td>
+                <td style=" background-color:{{ nota.cod_nota.cod_procedencia.cod_proced_superior.color}};!important" colspan="2" class="form-header">{{ nota.cod_nota.cod_procedencia}} - EXP: {{ nota.cod_nota.no_exp}} </td>
             </tr>
             <tr>
                 <td colspan="3" class="form-header" style="text-align: justify;">CONTENIDO: <br>{{ nota.contenido}}</td>
@@ -126,18 +125,10 @@
         <button class="print-button no-print" onclick="window.print()">Imprimir Formulario</button>
      </div>
 </body>
-
-
-
 <script>
 function printTable() {
-    // Guardamos el contenido original de la página
     var originalContent = document.body.innerHTML;
-
-    // Obtenemos solo la tabla
     var tableContent = document.querySelector(".form-table").outerHTML;
-
-    // Reemplazamos el contenido de la página con la tabla
     document.body.innerHTML = `
         <html>
         <head>
@@ -155,11 +146,7 @@ function printTable() {
         </body>
         </html>
     `;
-
-    // Ejecutamos la impresión
     window.print();
-
-    // Restauramos el contenido original después de imprimir
     document.body.innerHTML = originalContent;
 }
 </script>
