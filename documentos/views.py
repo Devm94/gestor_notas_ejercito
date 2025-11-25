@@ -83,15 +83,18 @@ def form_procesamiento(request):
         fch_nota_c = make_aware(fch_nota_c)
         fch_limite_c = datetime.strptime(request.POST['fch_limite'], "%Y-%m-%dT%H:%M")
         fch_limite_c = make_aware(fch_limite_c)
-        procesamiento_nota.objects.create(
-            cod_nota = preregistro_nota.objects.get(id=request.POST['itemId']),
-            fch_exp = fch_nota_c,
-            fch_limite = fch_limite_c,
-            tp_documentacion = tp_documentacion.objects.get(id=request.POST['tp_documentacion']),
-            contenido = request.POST['contenido'],
-            tp_prioridad = tp_prioridad.objects.get(id=request.POST['tp_prioridad']),
-            cod_usuario = User.objects.get(username=request.user),
-            )
+        if procesamiento_nota.objects.filter(cod_nota=preregistro_nota.objects.get(id=request.POST['itemId'])).exists():
+            print("Ya existe la nota")
+        else:
+            procesamiento_nota.objects.create(
+                cod_nota = preregistro_nota.objects.get(id=request.POST['itemId']),
+                fch_exp = fch_nota_c,
+                fch_limite = fch_limite_c,
+                tp_documentacion = tp_documentacion.objects.get(id=request.POST['tp_documentacion']),
+                contenido = request.POST['contenido'],
+                tp_prioridad = tp_prioridad.objects.get(id=request.POST['tp_prioridad']),
+                cod_usuario = User.objects.get(username=request.user),
+                )
         nuevo_estado = estado_preregistro.objects.get(id=2)  # Ejemplo: ID del nuevo estado
         preregistro_nota.objects.filter(id=request.POST['itemId']).update(cod_estado_preregistro=nuevo_estado)
         return redirect('procesamiento')
@@ -444,10 +447,14 @@ def nota_destinatarios(request, id):
 def imprimir_nota(request, pk):
     print(pk)
     nota = procesamiento_nota.objects.get(id=pk)
+    
     print(nota)
     return render(request, "documentacion/disposicion_print.html", {"nota": nota})
 def imprimir_nota_proc(request, pk):
+    nota1 = procesamiento_nota.objects.filter(cod_nota=pk)
     nota = procesamiento_nota.objects.get(cod_nota=pk)
+    print(nota1)
+    
     return render(request, "documentacion/disposicion_print.html", {"nota": nota})
 
 @login_required
