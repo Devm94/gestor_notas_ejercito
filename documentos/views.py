@@ -709,7 +709,14 @@ def actualizar_estado_nota(request):
             r.cod_estado_cumplimiento = estado_realizada
             r.save()
         return redirect(form_procesamiento)
-    
+
+def actualizar_nota(request):
+    if request.method == "POST":
+        nota_procesada = request.POST.get('r_itemId')
+        nota = procesamiento_nota.objects.get(id=nota_procesada)
+        nota.contenido = request.POST.get('r_contenido')
+        nota.save()
+        return redirect(form_procesamiento)  
     
 def fix_registros(request):
     contador_e = 0
@@ -734,3 +741,20 @@ def fix_registros(request):
             nota.save()
             total_actualizado += 1
     return HttpResponse(f"Registros ACTUALIZADOS: {total_actualizado} (Ejército: {contador_e}, Común: {contador_c})")
+
+def manto_sistema(request):
+    ls_procedencia = procedencia.objects.filter(cod_proced_superior__isnull=True)
+    ls_procedencia_inf = procedencia.objects.exclude(cod_proced_superior__isnull=True)
+    if request.method == "POST":
+        procedencia_superior = procedencia.objects.get(id = request.POST.get('procedencia_sup'))
+        c_procedencia = procedencia.objects.create(
+            descrip_corta = request.POST.get('txt_procedencia'),
+            descrip_larga = request.POST.get('txt_procedencia_l'),
+            cod_proced_superior = procedencia_superior,
+            color = procedencia_superior.color,
+            )
+        return redirect("manto_sistema")
+    context = {'ls_procedencia' : ls_procedencia ,
+               'ls_procedencia_inf' : ls_procedencia_inf ,
+               }
+    return render(request, "mantenimiento/general.html", context)

@@ -1,0 +1,140 @@
+{% extends '../core/base.html' %} {% load static %} {% block 'contenido' %}
+<link
+  rel="stylesheet"
+  href="{% static 'lib/adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css' %}"
+/>
+<link
+  rel="stylesheet"
+  href="{% static 'lib/adminlte/plugins/datatables-responsive/css/responsive.bootstrap4.min.css' %}"
+/>
+<link
+  rel="stylesheet"
+  href="{% static 'lib/adminlte/plugins/datatables-buttons/css/buttons.bootstrap4.min.css' %}"
+/>
+<link rel="stylesheet" href="{% static 'css/estilo_alerta.css' %}" />
+
+<section class="content-header"></section>
+<section class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Registrar Procedencia</h3>
+            <div class="card-tools"></div>
+          </div>
+          <div class="card-body">
+            <form
+              id="form_registro_proc"
+              method="POST"
+              enctype="multipart/form-data"
+            >
+              {% csrf_token %}
+              <div class="row">
+                <div class="col-md-12">
+                  <label for="procedencia_sup" class="form-label"
+                    >Procedencia Perteneciente</label
+                  >
+                  <select
+                    class="form-control"
+                    id="procedencia_sup"
+                    name="procedencia_sup"
+                    required
+                  >
+                    <option value="" selected>Seleccione...</option>
+                    {% for procedencia in ls_procedencia %}
+                    <option value="{{ procedencia.id }}">
+                      {{ procedencia.descrip_larga }}
+                    </option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <label for="procedencia_sup" class="form-label"
+                    >Descripcion Corta</label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="txt_procedencia"
+                    name="txt_procedencia"
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label for="procedencia_sup" class="form-label"
+                    >Descripcion Larga</label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="txt_procedencia_l"
+                    name="txt_procedencia_l"
+                  />
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12 text-right mt-3">
+                  <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="fas fa-save"></i> Guardar
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Procedencia</h3>
+            <div class="card-tools"></div>
+          </div>
+          <div class="card-body">
+            <table
+              id="example1"
+              class="table table-bordered table-striped table-sm compact-table"
+              style="font-size: 12px"
+            >
+              <thead>
+                <tr>
+                  <th>No.</th>
+                  <th>Procedencia</th>
+                  <th>Procediencia Superior</th>
+                  <th>Color</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for proc in ls_procedencia_inf %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>{{ proc.descrip_corta }}</td>
+                  <td>{{ proc.cod_proced_superior }}</td>
+                  <td>{{ proc.color }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'js/tabla.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-responsive/js/responsive.bootstrap4.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-buttons/js/dataTables.buttons.min.js' %}"></script>
+<script src="{% static 'lib/adminlte/plugins/datatables-buttons/js/buttons.bootstrap4.min.js' %}"></script>
+<script></script>
+
+{% endblock %}

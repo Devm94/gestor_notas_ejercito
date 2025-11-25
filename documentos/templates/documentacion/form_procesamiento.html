@@ -204,9 +204,9 @@
         </button>
       </div>
       <div class="modal-body">
-      <form id="formAgregar" method="POST" enctype="multipart/form-data">
+      <form id="actualizar_nota" method="POST" action="{% url 'actualizar_nota' %}" enctype="multipart/form-data">
         {% csrf_token %}
-          <input type="hidden" id="r_itemId" name="itemId" />
+          <input type="hidden" id="r_itemId" name="r_itemId" />
         <div class="row mb-3">
           <div class="col-md-6">
             <label for="fechaNota" class="form-label">Fecha de Nota</label>
@@ -241,13 +241,17 @@
               id="r_contenido"
               name="r_contenido"
               rows="3"
-              readonly
             ></textarea>
           </div>
         </div>
         <label for="r_selectDocumento" class="form-label">Seleccione un documento:</label>
           <select id="r_selectDocumento" class="form-select"></select>
             <iframe id="r_visorDocumento" src="" width="100%" height="600px" style="border: none"></iframe>
+        </div>
+                <div class="modal-footer">
+          <button type="submit" class="btn btn-primary" form="actualizar_nota">
+            Actualizar
+          </button>
         </div>
       </form>
     </div>
@@ -452,7 +456,7 @@
     fetch(`/revisar_procesamiento/${id}/`)
       .then((response) => response.json())
       .then((data) => {
-        document.getElementById("itemId").value = data.id;
+        document.getElementById("r_itemId").value = data.id;
         document.querySelector('[name="r_fch_exp"]').value = data.fch_exp;
         document.querySelector('[name="r_fch_limite"]').value = data.fch_limite;
         document.querySelector('[name="r_tp_prioridad"]').value =data.tp_prioridad;

@@ -49,6 +49,10 @@ class procedencia(models.Model):
     def __str__(self):
         fila =  str(self.descrip_corta)
         return fila
+    class Meta:
+        permissions = [
+            ("crear_procedencia", "Puede solamente crear procedencias"),
+        ]
 
 class PerfilUsuario(models.Model):
     usuario = models.OneToOneField(User, on_delete=models.CASCADE)
