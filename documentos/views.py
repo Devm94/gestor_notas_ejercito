@@ -69,7 +69,7 @@ def form_recepcion(request):
 def form_procesamiento(request):
     ls_tp_prioridad = tp_prioridad.objects.all()
     ls_preregistro_notas = preregistro_nota.objects.filter(cod_estado_preregistro = estado_preregistro.objects.get(id = 1)).order_by("cod_estado_preregistro").all()
-    ls_procesadas_notas = procesamiento_nota.objects.order_by("-fch_procesamiento").all()
+    ls_procesadas_notas = procesamiento_nota.objects.filter(cod_usuario = User.objects.get(username=request.user)).order_by("-fch_procesamiento").all()
     v_tp_documentacion = tp_documentacion.objects.all()
     ls_procedencia = procedencia.objects.filter(cod_proced_superior__isnull=True)
     context = {'ls_preregistro_notas' : ls_preregistro_notas,
@@ -452,8 +452,9 @@ def imprimir_nota(request, pk):
     return render(request, "documentacion/disposicion_print.html", {"nota": nota})
 def imprimir_nota_proc(request, pk):
     nota1 = procesamiento_nota.objects.filter(cod_nota=pk)
-    nota = procesamiento_nota.objects.get(cod_nota=pk)
     print(nota1)
+    nota = procesamiento_nota.objects.get(cod_nota=pk)
+
     
     return render(request, "documentacion/disposicion_print.html", {"nota": nota})
 

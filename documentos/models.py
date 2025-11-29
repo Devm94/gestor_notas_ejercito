@@ -385,3 +385,10 @@ class Anuncio(models.Model):
 
     def __str__(self):
         return self.titulo
+    
+class user_color(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    color = models.TextField(null = True)
+    def __str__(self):
+        fila = str(self.user.username ) 
+        return fila
