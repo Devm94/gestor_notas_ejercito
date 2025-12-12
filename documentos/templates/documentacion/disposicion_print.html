@@ -120,7 +120,7 @@
             </tr>
             <tr>
                 <td colspan="1" class="form-header">FECHA LIMITE: <br>{{ nota.fch_limite_formateada}}</td>
-                <td colspan="2" class="form-header" style="text-align: center;">GENERAL DE BRIGADA<br><br><br>HÉCTOR BENJAMÍN VALERIO ARDÓN<br>COMANDANTE GENERAL DEL EJÉRCITO<br>EHO-2582</td>
+                <td colspan="2" class="form-header" style="text-align: center;">{{firma.cod_grado.descrip_larga}} {% if firma.cod_arma.descrip_corta != 'N/A' %} {{firma.cod_arma}} {%endif%}<br><br><br> {{firma.nom_completo}}<br>{{firma.cargo_segun_firma}}<br>{{firma.serie}}</td>
             </tr>
         </table>
         <button class="print-button no-print" onclick="window.print()">Imprimir Formulario</button>

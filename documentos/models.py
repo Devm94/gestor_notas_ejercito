@@ -1,7 +1,7 @@
 import os
 from uuid import uuid4
 from django.db import models
-
+from django.utils import timezone
 from django.contrib.auth.models import User
 # import pikepdf
 from django.core.files.base import ContentFile
@@ -27,18 +27,7 @@ def camb_nom_arch_enviadas(instance, filename):
     return f'nota_enviadas_{instance.id}/{filename}'
 def camb_nom_arch_enviadas_resp(instance, filename):
     return f'nota_enviadas_resp_{instance.id}/{filename}'
-class usuario(models.Model):
-    id = models.AutoField(primary_key=True)
-    nom_usuario = models.TextField()
-    nombre = models.TextField()
-    apellido = models.TextField()
-    cod_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-    mision = models.TextField(null = True)
-    vision = models.TextField(null = True)
-    def __str__(self):
-        fila =  str(self.nom_usuario)
-        return fila
-    
+
 
 class procedencia(models.Model):
     id = models.AutoField(primary_key=True)
@@ -53,6 +42,19 @@ class procedencia(models.Model):
         permissions = [
             ("crear_procedencia", "Puede solamente crear procedencias"),
         ]
+        
+class usuario(models.Model):
+    id = models.AutoField(primary_key=True)
+    nom_usuario = models.TextField()
+    nombre = models.TextField()
+    apellido = models.TextField()
+    cod_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    mision = models.TextField(null = True)
+    vision = models.TextField(null = True)
+    cod_procedencia = models.ForeignKey(procedencia, on_delete=models.SET_NULL, null=True)
+    def __str__(self):
+        fila =  str(self.nom_usuario)
+        return fila
 
 class PerfilUsuario(models.Model):
     usuario = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -60,7 +62,56 @@ class PerfilUsuario(models.Model):
 
     def __str__(self):
         return self.usuario.username 
+
+
+class grado(models.Model):
+    id = models.AutoField(primary_key=True)
+    descrip_corta = models.TextField(null=True)
+    descrip_larga = models.TextField(null=True)
     
+    def save(self, *args, **kwargs):
+        self.descrip_corta = self.descrip_corta.upper()
+        self.descrip_larga = self.descrip_larga.upper()
+        super().save(*args, **kwargs)
+            
+    def __str__(self):
+        fila = str(self.descrip_corta) 
+        return fila
+    
+class arma(models.Model):
+    id = models.AutoField(primary_key=True)
+    descrip_corta = models.TextField(null=True)
+    descrip_larga = models.TextField(null=True)
+
+    def save(self, *args, **kwargs):
+        self.descrip_corta = self.descrip_corta.upper()
+        self.descrip_larga = self.descrip_larga.upper()
+        super().save(*args, **kwargs)
+        
+    def __str__(self):
+        fila = str(self.descrip_corta) 
+        return fila
+
+class firma_autorizada(models.Model):
+    id = models.AutoField(primary_key=True)
+    cod_grado = models.ForeignKey(grado, on_delete=models.CASCADE,default=1)
+    cod_arma = models.ForeignKey(arma, on_delete=models.CASCADE,default=1)
+    nom_completo = models.TextField(null=True)
+    serie = models.TextField(null=True)
+    activo = models.BooleanField(default=True)
+    cargo_segun_firma = models.TextField(null=True)
+    diplomado = models.TextField(null=True)
+    cod_procedencia = models.ForeignKey(procedencia, on_delete=models.CASCADE,default=1)
+    fecha_creacion = models.DateTimeField(default=timezone.now)
+    
+    def __str__(self):
+        return f"{self.cod_grado} {self.cod_arma} {self.nom_completo}"
+    
+    def save(self, *args, **kwargs):
+        self.nom_completo = self.nom_completo.upper()
+        self.serie = self.serie.upper()
+        super().save(*args, **kwargs)    
+
 class tp_prioridad(models.Model):
     id = models.AutoField(primary_key=True)
     descrip_corta = models.TextField()
@@ -165,30 +216,6 @@ class preregistro_nota_arch(models.Model):
             self.nombre_archivo = os.path.basename(self.arch.name) 
             super().save(*args, **kwargs)
 
-    # def save(self, *args, **kwargs):
-    #     # Guardar primero para que exista el archivo en disco
-    #     created = self._state.adding  # True si es un nuevo registro
-    #     super().save(*args, **kwargs)
-
-    #     if self.arch and self.arch.name.lower().endswith('.pdf'):
-    #         try:
-    #             pdf_path = self.arch.path
-    #             temp_path = pdf_path.replace(".pdf", "_temp.pdf")
-
-    #             with pikepdf.open(pdf_path) as pdf:
-    #                 pdf.save(temp_path, linearize=True)
-
-    #             os.replace(temp_path, pdf_path)
-
-    #             # Actualizar nombre_archivo solo si es nuevo o está vacío
-    #             if not self.nombre_archivo:
-    #                 self.nombre_archivo = os.path.basename(self.arch.name)
-    #                 # Guardar solo ese campo sin crear un nuevo registro
-    #                 preregistro_nota_arch.objects.filter(id=self.id).update(nombre_archivo=self.nombre_archivo)
-
-    #         except Exception as e:
-    #             print(f"⚠️ Error al comprimir PDF: {e}")
-
 class procesamiento_nota(models.Model):
     id = models.AutoField(primary_key=True)
     cod_nota = models.ForeignKey(preregistro_nota, on_delete=models.CASCADE)
@@ -201,6 +228,7 @@ class procesamiento_nota(models.Model):
     tp_prioridad = models.ForeignKey(tp_prioridad, on_delete=models.CASCADE, null = True)
     tp_documentacion = models.ForeignKey(tp_documentacion, on_delete=models.CASCADE, null = True)
     fch_procesamiento = models.DateTimeField(auto_now_add=True)
+    cod_firma_autorizada = models.ForeignKey(firma_autorizada, on_delete=models.CASCADE, null=True)
     
     def formato_fecha(self, fecha):
         if fecha:
@@ -324,29 +352,7 @@ class evidencia_cumpli_nota_arch(models.Model):
         if self.arch:
             self.nombre_archivo = os.path.basename(self.arch.name) 
             super().save(*args, **kwargs)
-    # def save(self, *args, **kwargs):
-    #     # Guardar primero para que exista el archivo en disco
-    #     created = self._state.adding  # True si es un nuevo registro
-    #     super().save(*args, **kwargs)
 
-    #     if self.arch and self.arch.name.lower().endswith('.pdf'):
-    #         try:
-    #             pdf_path = self.arch.path
-    #             temp_path = pdf_path.replace(".pdf", "_temp.pdf")
-
-    #             with pikepdf.open(pdf_path) as pdf:
-    #                 pdf.save(temp_path, linearize=True)
-
-    #             os.replace(temp_path, pdf_path)
-
-    #             # Actualizar nombre_archivo solo si es nuevo o está vacío
-    #             if not self.nombre_archivo:
-    #                 self.nombre_archivo = os.path.basename(self.arch.name)
-    #                 # Guardar solo ese campo sin crear un nuevo registro
-    #                 preregistro_nota_arch.objects.filter(id=self.id).update(nombre_archivo=self.nombre_archivo)
-
-    #         except Exception as e:
-    #             print(f"⚠️ Error al comprimir PDF: {e}")
     
 class nota_disp_arch(models.Model):
     id = models.AutoField(primary_key=True)
@@ -392,3 +398,4 @@ class user_color(models.Model):
     def __str__(self):
         fila = str(self.user.username ) 
         return fila
+

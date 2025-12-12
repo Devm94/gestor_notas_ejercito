@@ -113,13 +113,37 @@
           </a>
         </li>
         {% if perms.documentos.crear_procedencia %}
-        <li class="nav-item">
-          <a href="{% url 'manto_sistema' %}" class="nav-link">
-            <i class="nav-icon fas fa-cog"></i>
-            <p>Mantenimiento</p>
-          </a>
-        </li>
+<li class="nav-item has-treeview">
+  <a href="#" class="nav-link">
+    <i class="nav-icon fas fa-cog"></i>
+    <p>
+      Mantenimiento
+      <i class="right fas fa-angle-left"></i>
+    </p>
+  </a>
+  <ul class="nav nav-treeview">
+    <li class="nav-item">
+      <a href="{% url 'firma_autorizada' %}" class="nav-link">
+        <i class="far fa-circle nav-icon"></i>
+        <p>Firma Aut.</p>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="{% url 'manto_sistema' %}" class="nav-link">
+        <i class="far fa-circle nav-icon"></i>
+        <p>Procedencia</p>
+      </a>
+    </li>
+    <li class="nav-item">
+      <a href="" class="nav-link">
+        <i class="far fa-circle nav-icon"></i>
+        <p>Roles</p>
+      </a>
+    </li>
+  </ul>
+</li>
         {% endif %}
+
         <li class="nav-item mt-auto">
           <form
             action="{% url 'cerrar_sesion' %}"
@@ -133,7 +157,7 @@
               style="background: none; border: none"
             >
               <i class="nav-icon fas fa-sign-out-alt"></i>
-              <p>Cerrar sesión</p>
+              <p>Cerrar sesiónv</p>
             </button>
           </form>
         </li>

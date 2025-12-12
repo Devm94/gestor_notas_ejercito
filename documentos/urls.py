@@ -47,4 +47,5 @@ urlpatterns = [
     path("actualizar_nota/", views.actualizar_nota, name="actualizar_nota"),
     path("rellenar-registros/", views.fix_registros),
     path("manto_sistema/", views.manto_sistema, name="manto_sistema"),
+    path("firma_autorizada/", views.firma_auto, name="firma_autorizada"),
     ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,5 +1,4 @@
 import json
-from django.shortcuts import render
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponse
 from .models import *
@@ -86,6 +85,8 @@ def form_procesamiento(request):
         if procesamiento_nota.objects.filter(cod_nota=preregistro_nota.objects.get(id=request.POST['itemId'])).exists():
             print("Ya existe la nota")
         else:
+            usuario_log = usuario.objects.get(cod_user = User.objects.get(username=request.user))
+            firma = firma_autorizada.objects.get(activo=True,cod_procedencia_id=usuario_log.cod_procedencia)
             procesamiento_nota.objects.create(
                 cod_nota = preregistro_nota.objects.get(id=request.POST['itemId']),
                 fch_exp = fch_nota_c,
@@ -94,6 +95,7 @@ def form_procesamiento(request):
                 contenido = request.POST['contenido'],
                 tp_prioridad = tp_prioridad.objects.get(id=request.POST['tp_prioridad']),
                 cod_usuario = User.objects.get(username=request.user),
+                cod_firma_autorizada = firma,
                 )
         nuevo_estado = estado_preregistro.objects.get(id=2)  # Ejemplo: ID del nuevo estado
         preregistro_nota.objects.filter(id=request.POST['itemId']).update(cod_estado_preregistro=nuevo_estado)
@@ -445,18 +447,28 @@ def nota_destinatarios(request, id):
     return JsonResponse({"nota_id": nota.id, "destinatarios": destinatarios_data})
 
 def imprimir_nota(request, pk):
-    print(pk)
     nota = procesamiento_nota.objects.get(id=pk)
-    
-    print(nota)
-    return render(request, "documentacion/disposicion_print.html", {"nota": nota})
-def imprimir_nota_proc(request, pk):
-    nota1 = procesamiento_nota.objects.filter(cod_nota=pk)
-    print(nota1)
     nota = procesamiento_nota.objects.get(cod_nota=pk)
+    usuario_log = usuario.objects.get(id = nota.cod_usuario.id)
+    firma = firma_autorizada.objects.filter(activo=True,cod_procedencia_id=usuario_log.cod_procedencia)
+    context = {
+        'nota' : nota ,
+        'usuario_log' : usuario_log ,
+        'firma' : firma 
+        }    
 
-    
-    return render(request, "documentacion/disposicion_print.html", {"nota": nota})
+    return render(request, "documentacion/disposicion_print.html", context)
+def imprimir_nota_proc(request, pk):
+    nota = procesamiento_nota.objects.get(cod_nota=pk)
+    usuario_log = usuario.objects.get(cod_user = nota.cod_usuario)
+    firma = firma_autorizada.objects.get(activo = True, cod_procedencia=usuario_log.cod_procedencia)
+
+    context = {
+        'nota' : nota ,
+        'usuario_log' : usuario_log ,
+        'firma' : firma 
+        }    
+    return render(request, "documentacion/disposicion_print.html", context)
 
 @login_required
 def nota_enviada(request):
@@ -766,3 +778,33 @@ def manto_sistema(request):
                'ls_procedencia_inf' : ls_procedencia_inf ,
                }
     return render(request, "mantenimiento/general.html", context)
+
+def firma_auto(request):
+    ls_grado = grado.objects.all()
+    ls_arma = arma.objects.all()
+    usuario_log = usuario.objects.get(cod_user = User.objects.get(username=request.user))
+    ls_firmas = firma_autorizada.objects.filter(activo=True,cod_procedencia_id=usuario_log.cod_procedencia)
+    if request.method == "POST":
+        c_usuario = usuario.objects.get(cod_user = User.objects.get(username=request.user))
+        print(c_usuario.cod_procedencia.id)
+        c_procedencia = procedencia.objects.get(id = c_usuario.cod_procedencia.id)
+        c_grado = grado.objects.get(id = request.POST.get('txt_grado'))
+        c_arma = arma.objects.get(id = request.POST.get('txt_arma'))
+        firma_autorizada.objects.filter(cod_procedencia=c_procedencia).update(activo=False)
+        c_firma = firma_autorizada.objects.create(
+            cod_arma = c_arma,
+            cod_grado = c_grado,
+            nom_completo = request.POST.get('txt_nom_completo'),
+            serie = request.POST.get('txt_serie'),
+            diplomado = request.POST.get('txt_diplomado'),
+            cargo_segun_firma = request.POST.get('txt_cargo'),
+            cod_procedencia = c_procedencia,
+            )
+        return redirect("firma_autorizada")
+    context = {
+        'ls_grado' : ls_grado ,
+        'ls_arma' : ls_arma ,
+        'ls_firmas' : ls_firmas ,
+        }
+    return render(request, "mantenimiento/firma_aut.html", context)
+
