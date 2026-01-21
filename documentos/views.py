@@ -811,6 +811,8 @@ def firma_auto(request):
 
 
 
+from django.urls import reverse
+
 def preregistro_datatable(request):
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
@@ -823,9 +825,9 @@ def preregistro_datatable(request):
 
     column_map = {
         "1": "fch_rcp",
-        "2": "cod_procedencia__nombre",
+        "2": "cod_procedencia__descrip_corta",
         "3": "no_exp",
-        "4": "cod_estado_preregistro__nombre",
+        "4": "cod_estado_preregistro__descrip_corta",
         "5": "cod_usuario__username",
     }
 
@@ -841,7 +843,7 @@ def preregistro_datatable(request):
 
     records_total = queryset.count()
 
-    # 🔍 BÚSQUEDA GLOBAL
+    # 🔍 Búsqueda
     if search_value:
         queryset = queryset.filter(
             Q(no_exp__icontains=search_value) |
@@ -852,14 +854,45 @@ def preregistro_datatable(request):
 
     records_filtered = queryset.count()
 
-    # 🔃 ORDENAMIENTO
-    queryset = queryset.order_by(order_field)
-
-    # 📄 PAGINACIÓN
-    queryset = queryset[start:start + length]
+    queryset = queryset.order_by(order_field)[start:start + length]
 
     data = []
+
     for index, obj in enumerate(queryset, start=start + 1):
+
+        acciones = f"""
+            <a class="dropdown-item text-info"
+               href="#"
+               data-toggle="modal"
+               data-target="#modal_revisar"
+               onclick="revisar({obj.id})">
+               Revisar
+            </a>
+        """
+
+        # 🔸 Corregir (estado = 4)
+        if obj.cod_estado_preregistro.id == 4:
+            acciones += f"""
+                <a class="dropdown-item text-warning"
+                   href="#"
+                   data-toggle="modal"
+                   data-target="#modal_corregir"
+                   onclick="corregir({obj.id})">
+                   Corregir
+                </a>
+            """
+
+        # 🔸 Eliminar (estado = 1)
+        if obj.cod_estado_preregistro.id == 1:
+            url_eliminar = reverse('eliminar_nota', args=[obj.id])
+            acciones += f"""
+                <a href="{url_eliminar}"
+                   class="dropdown-item text-danger"
+                   onclick="return confirm('¿Seguro que quieres eliminar este registro?');">
+                   Eliminar
+                </a>
+            """
+
         data.append({
             "contador": index,
             "fecha": obj.fch_rcp_formateada(),
@@ -869,17 +902,13 @@ def preregistro_datatable(request):
             "responsable": obj.cod_usuario.username,
             "acciones": f"""
                 <div class="dropdown">
-                    <button class="btn btn-outline-primary btn-sm dropdown-toggle"
-                            type="button" data-toggle="dropdown">
-                        Acciones
-                    </button>
-                    <div class="dropdown-menu">
-                        <a class="dropdown-item text-info"
-                           href="#"
-                           onclick="revisar({obj.id})">
-                           Revisar
-                        </a>
-                    </div>
+                  <button class="btn btn-outline-primary btn-sm btn-block dropdown-toggle"
+                          type="button" data-toggle="dropdown">
+                    Acciones
+                  </button>
+                  <div class="dropdown-menu">
+                    {acciones}
+                  </div>
                 </div>
             """
         })
