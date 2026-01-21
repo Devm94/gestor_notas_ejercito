@@ -48,4 +48,5 @@ urlpatterns = [
     path("rellenar-registros/", views.fix_registros),
     path("manto_sistema/", views.manto_sistema, name="manto_sistema"),
     path("firma_autorizada/", views.firma_auto, name="firma_autorizada"),
+    path('preregistro/datatable/', views.preregistro_datatable, name='preregistro_datatable'),
     ]  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -11,7 +11,8 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 from django.contrib.auth import logout
 from django.db import transaction
-
+from django.http import JsonResponse
+from django.db.models import Q
 
 @login_required
 def inicio(request):
@@ -808,3 +809,84 @@ def firma_auto(request):
         }
     return render(request, "mantenimiento/firma_aut.html", context)
 
+
+
+def preregistro_datatable(request):
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 10))
+    search_value = request.GET.get('search[value]', '').strip()
+
+    # Ordenamiento
+    order_column_index = request.GET.get('order[0][column]', None)
+    order_dir = request.GET.get('order[0][dir]', 'asc')
+
+    column_map = {
+        "1": "fch_rcp",
+        "2": "cod_procedencia__nombre",
+        "3": "no_exp",
+        "4": "cod_estado_preregistro__nombre",
+        "5": "cod_usuario__username",
+    }
+
+    order_field = column_map.get(order_column_index, 'fch_rcp')
+    if order_dir == 'desc':
+        order_field = f"-{order_field}"
+
+    queryset = preregistro_nota.objects.select_related(
+        'cod_procedencia',
+        'cod_estado_preregistro',
+        'cod_usuario'
+    )
+
+    records_total = queryset.count()
+
+    # 🔍 BÚSQUEDA GLOBAL
+    if search_value:
+        queryset = queryset.filter(
+            Q(no_exp__icontains=search_value) |
+            Q(cod_procedencia__descrip_corta__icontains=search_value) |
+            Q(cod_estado_preregistro__descrip_corta__icontains=search_value) |
+            Q(cod_usuario__username__icontains=search_value)
+        )
+
+    records_filtered = queryset.count()
+
+    # 🔃 ORDENAMIENTO
+    queryset = queryset.order_by(order_field)
+
+    # 📄 PAGINACIÓN
+    queryset = queryset[start:start + length]
+
+    data = []
+    for index, obj in enumerate(queryset, start=start + 1):
+        data.append({
+            "contador": index,
+            "fecha": obj.fch_rcp_formateada(),
+            "remitente": obj.cod_procedencia.descrip_corta,
+            "expediente": obj.no_exp,
+            "estado": obj.cod_estado_preregistro.descrip_corta,
+            "responsable": obj.cod_usuario.username,
+            "acciones": f"""
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary btn-sm dropdown-toggle"
+                            type="button" data-toggle="dropdown">
+                        Acciones
+                    </button>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item text-info"
+                           href="#"
+                           onclick="revisar({obj.id})">
+                           Revisar
+                        </a>
+                    </div>
+                </div>
+            """
+        })
+
+    return JsonResponse({
+        "draw": draw,
+        "recordsTotal": records_total,
+        "recordsFiltered": records_filtered,
+        "data": data
+    })
