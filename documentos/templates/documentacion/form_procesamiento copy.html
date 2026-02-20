@@ -30,7 +30,96 @@
                 </tr>
               </thead>
               <tbody>
+{% for nota in ls_preregistro_notas %}
+<tr {% if nota.cod_estado_preregistro.id == 1 %} style="background-color: #fff3cd; font-weight: bold;" {% endif %}>
+  <td>{{ forloop.counter }}</td>
+  <td>{{ nota.fch_rcp_formateada }}</td>
+  <td>{{ nota.cod_procedencia }}</td>
+  <td>{{ nota.no_exp }}</td>
 
+  <td style="display:none;">{{ nota.contenido }}</td>
+
+  <td {% if nota.cod_estado_preregistro.id == 1 %} style="background-color: #fff3cd; font-weight: bold;" {% endif %}>{{ nota.cod_estado_preregistro }}</td>
+      
+  
+
+  <td>{{ nota.cod_usuario }}</td>
+
+  <td>
+    <div class="dropdown">
+      <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-toggle="dropdown">
+        Acciones
+      </button>
+
+      <div class="dropdown-menu">
+        {% if nota.cod_estado_preregistro.id == 1 %}
+        <a class="dropdown-item text-info" href="#" data-toggle="modal" data-target="#modalAgregar"
+           onclick="procesar({{ nota.id }})">Procesar</a>
+        {% endif %}
+
+        {% if nota.cod_estado_preregistro.id >= 2 %}
+        <a class="dropdown-item text-info" href="#" data-toggle="modal" data-target="#modalrevisar"
+           onclick="revisar({{ nota.id }})">Revisar</a>
+
+        <a class="dropdown-item text-info" href="#" data-toggle="modal" data-target="#modal_expediente"
+           onclick="ver_cumplimiento({{ nota.id }})">Cumplimiento</a>
+
+        <a class="dropdown-item text-success" href="#" data-toggle="modal" data-target="#modal_info_aprobado"
+           onclick="llenarItemId({{ nota.id }})">Disposición</a>
+
+        <a class="dropdown-item text-info" href="{% url 'imprimir_nota_proc' nota.id %}" target="_blank">
+          Imprimir
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </td>
+</tr>
+{% endfor %}
+{% with total1=ls_preregistro_notas|length %}
+{% for proc in ls_procesadas_notas %}
+<tr>
+  <td>{{ total1|add:forloop.counter }}</td>
+  <td>{{ proc.cod_nota.fch_rcp_formateada }}</td>
+  <td>{{ proc.cod_nota.cod_procedencia }}</td>
+  <td>{{ proc.cod_nota.no_exp }}</td>
+
+  <td style="display:none;">{{ proc.contenido }}</td>
+
+  <td>
+    {{ proc.cod_nota.cod_estado_preregistro }}
+  </td>
+
+  <td>{{ proc.cod_usuario }}</td>
+
+  <td>
+    <div class="dropdown">
+      <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-toggle="dropdown">
+        Acciones
+      </button>
+
+      <div class="dropdown-menu">
+
+        {% if proc.cod_nota.cod_estado_preregistro.id >= 2 %}
+        <a class="dropdown-item text-info" href="#" data-toggle="modal" data-target="#modalrevisar"
+           onclick="revisar({{ proc.cod_nota.id }})">Revisar</a>
+
+        <a class="dropdown-item text-info" href="#" data-toggle="modal" data-target="#modal_expediente"
+           onclick="ver_cumplimiento({{ proc.cod_nota.id }})">Cumplimiento</a>
+
+        <a class="dropdown-item text-success" href="#" data-toggle="modal" data-target="#modal_info_aprobado"
+           onclick="llenarItemId({{ proc.cod_nota.id }})">Disposición</a>
+
+        <a class="dropdown-item text-info" href="{% url 'imprimir_nota_proc' proc.cod_nota.id %}" target="_blank">
+          Imprimir
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </td>
+</tr>
+{% endfor %}
+{% endwith %}
               </tbody>
             </table>
           </div>
@@ -283,9 +372,9 @@
 </div>
 <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
-
+<script src="{% static 'js/tabla.js' %}"></script>
 <script src="{% static 'js/func_procedencia.js' %}"></script>
-
+<script src="{% static 'js/func_notas_enviadas.js' %}"></script>
 <script src="{% static 'lib/adminlte/plugins/datatables/jquery.dataTables.min.js' %}"></script>
 <script src="{% static 'lib/adminlte/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js' %}"></script>
 <script src="{% static 'lib/adminlte/plugins/datatables-responsive/js/dataTables.responsive.min.js' %}"></script>
@@ -293,52 +382,7 @@
 <script src="{% static 'lib/adminlte/plugins/datatables-buttons/js/dataTables.buttons.min.js' %}"></script>
 <script src="{% static 'lib/adminlte/plugins/datatables-buttons/js/buttons.bootstrap4.min.js' %}"></script>
 <script>
-jQuery(document).ready(function ($) {
-  $("#example1").DataTable({
-    processing: true,
-    serverSide: true,
-    pageLength: 10,
-    lengthMenu: [10, 25, 50, 100],
-    order: [[1, "desc"]],
-    ajax: {
-      url: "{% url 'procesamiento_datatable' %}",
-      type: "GET"
-    },
-    columns: [
-      { data: "contador", orderable: false },
-      { data: "fecha" },
-      { data: "remitente" },
-      { data: "expediente" },
-      { data: "estado" },
-      { data: "responsable" },
-      { data: "acciones", orderable: false, searchable: false }
-    ],
-    language: {
-      decimal: "",
-      emptyTable: "No hay datos disponibles en la tabla",
-      info: "Mostrando _START_ a _END_ de _TOTAL_ entradas",
-      infoEmpty: "Mostrando 0 a 0 de 0 entradas",
-      infoFiltered: "(filtrado de _MAX_ entradas totales)",
-      infoPostFix: "",
-      thousands: ",",
-      lengthMenu: "Mostrar _MENU_ entradas",
-      loadingRecords: "Cargando...",
-      processing: "Procesando...",
-      search: "Buscar:",
-      zeroRecords: "No se encontraron registros coincidentes",
-      paginate: {
-        first: "Primero",
-        last: "Último",
-        next: "Siguiente",
-        previous: "Anterior",
-      },
-      aria: {
-        sortAscending: ": activar para ordenar la columna ascendente",
-        sortDescending: ": activar para ordenar la columna descendente",
-      },
-    }
-  });
-});
+
   const div_adj_disp = document.getElementById("div_adj_disp");
   const div_vis_disp = document.getElementById("div_visor_dispo");
     var fileInput_Completar = "fileInput";
@@ -358,7 +402,10 @@ jQuery(document).ready(function ($) {
         const select = document.getElementById("selectDocumento");
         const visor = document.getElementById("visorDocumento");
         document.querySelector('[name="itemId"]').value = procesamiento_id;
+        // Limpiar combobox
         select.innerHTML = "";
+
+        // Llenar combobox con documentos
         data.archivos.forEach((doc) => {
           let option = document.createElement("option");
           option.value = doc.url;
@@ -372,6 +419,7 @@ jQuery(document).ready(function ($) {
         }
       });
   }
+
   document.addEventListener("DOMContentLoaded", function () {
     var modal = document.getElementById("modalAgregar");
     modal.addEventListener("show.bs.modal", function (event) {
@@ -381,19 +429,26 @@ jQuery(document).ready(function ($) {
       inputHidden.value = itemId;
     });
   });
+
   function revisar(id) {
     fetch(`/expediente_json_procesamiento/${id}/`) // Vista Django que devuelve JSON con archivos
       .then((response) => response.json())
       .then((data) => {
         const select = document.getElementById("r_selectDocumento");
         const visor = document.getElementById("r_visorDocumento");
+
         select.innerHTML = "";
+
+        // Llenar combobox con documentos
         data.archivos.forEach((doc) => {
+          
           let option = document.createElement("option");
           option.value = doc.url;
           option.textContent = doc.nombre;
           select.appendChild(option);
         });
+
+        // Mostrar el primero
         if (data.archivos.length > 0) {
           visor.src = data.archivos[0].url;
         }
@@ -415,6 +470,7 @@ function ver_cumplimiento(cumplimiento_id) {
     fetch(`/ver_cumplimiento_nota_proc/${cumplimiento_id}/`) // Vista Django que devuelve JSON con archivos
       .then((response) => response.json())
       .then((data) => {
+
         const contenedor = document.getElementById("listaRequerimientos");
         contenedor.innerHTML = "";
         if (data.length === 0) {
@@ -448,6 +504,7 @@ function ver_cumplimiento(cumplimiento_id) {
               </td>
           `;
             tbody.appendChild(fila);
+
             const filaDetalles = document.createElement("tr");
             filaDetalles.innerHTML = `
               <td colspan="4" class="p-0 border-0">
@@ -457,6 +514,7 @@ function ver_cumplimiento(cumplimiento_id) {
               </td>
           `;
             tbody.appendChild(filaDetalles);
+
             tabla.appendChild(tbody);
             contenedor.appendChild(tabla);
             const select = document.getElementById(`selectDocumento-${req.id}`);
@@ -470,11 +528,15 @@ function ver_cumplimiento(cumplimiento_id) {
         }
       });
   }
+  
   function abrirCollapse(id, botonVer) {
+
     const collapseElement = document.getElementById(id);
     const bsCollapse = new bootstrap.Collapse(collapseElement, {
       toggle: true,
     });
+
+    // Mostrar el botón de cerrar
     const botonCerrar = botonVer.nextElementSibling;
     botonCerrar.classList.remove("d-none");
     botonVer.classList.add("d-none");
@@ -485,6 +547,8 @@ function ver_cumplimiento(cumplimiento_id) {
       toggle: false,
     });
     bsCollapse.hide();
+
+    // Mostrar el botón de ver nuevamente
     const botonVer = botonCerrar.previousElementSibling;
     botonVer.classList.remove("d-none");
     botonCerrar.classList.add("d-none");
@@ -508,6 +572,7 @@ function ver_cumplimiento(cumplimiento_id) {
                         </select>
                     </div>
                 </div>
+
                 <div class="mt-3">
                     <iframe id="visorDocumento-${req.id}" src="${
                         req.documentos && req.documentos.length > 0 ? req.documentos[0].archivo : ''
@@ -521,6 +586,7 @@ function ver_cumplimiento(cumplimiento_id) {
 
 function llenarItemId(id) {
   document.getElementById("itemIdx").value = id;
+
   fetch(`/obtener_disposicion/obtener/${id}/2/`)
     .then((response) => response.json())
     .then((data) => {
@@ -562,17 +628,21 @@ function llenarItemId(id) {
 function actualizarListaDestinatarios() {
   const lista = document.getElementById("listaDestinatarios");
   lista.innerHTML = "";
+
   destinatarios.forEach((d, index) => {
     const li = document.createElement("li");
     li.className = "list-group-item d-flex justify-content-between align-items-center";
     li.textContent = `${d.procedencia_nombre} `;
+    
     const btn = document.createElement("button");
     btn.className = "btn btn-sm btn-danger";
     btn.innerHTML = "<i class='fas fa-trash'></i>";
+    
     btn.onclick = () => {
       destinatarios.splice(index, 1);
       actualizarListaDestinatarios();
     };
+
     li.appendChild(btn);
     lista.appendChild(li);
   });
@@ -580,14 +650,18 @@ function actualizarListaDestinatarios() {
   document.getElementById("destinatariosInput").value = JSON.stringify(destinatarios);
 }
   let destinatariosSeleccionados = [];
+
   function agregarDestinatario() {
     const select = document.getElementById("disp_sub_procedencia");
     const lista = document.getElementById("listaDestinatarios");
     const inputHidden = document.getElementById("destinatariosInput");
+
     const id = select.value;
     const nombre = select.options[select.selectedIndex].text;
+
     if (id && !destinatariosSeleccionados.includes(id)) {
       destinatariosSeleccionados.push(id);
+
       const li = document.createElement("li");
       li.classList.add(
         "list-group-item",
@@ -596,6 +670,7 @@ function actualizarListaDestinatarios() {
         "align-items-center"
       );
       li.textContent = nombre;
+
       const btnEliminar = document.createElement("button");
       btnEliminar.classList.add("btn", "btn-danger", "btn-sm");
       btnEliminar.innerHTML = "<i class='fas fa-trash'></i>";
@@ -606,8 +681,11 @@ function actualizarListaDestinatarios() {
         li.remove();
         inputHidden.value = destinatariosSeleccionados.join(",");
       };
+
       li.appendChild(btnEliminar);
       lista.appendChild(li);
+
+      // Actualizar input hidden
       inputHidden.value = JSON.stringify(
         destinatariosSeleccionados.map((id) => ({ sub_procedencia: id }))
       );
@@ -615,7 +693,9 @@ function actualizarListaDestinatarios() {
   }
   function registrar_disposicion(event) {
     event.preventDefault();
+
     let formData = new FormData(document.getElementById("formRegistroCME"));
+
     fetch("/registrar_disposicion/", {
       method: "POST",
       body: formData,

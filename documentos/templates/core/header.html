@@ -27,7 +27,7 @@
           {% endif %}
         </div>
         <div class="dropdown-divider"></div>
-        <a
+        
           href="{% url 'aprobacion' %}"
           class="dropdown-item dropdown-footer"
           >Ver todas</a
@@ -138,6 +138,14 @@
 </li>
         {% endif %}
 
+        <!-- Nueva opción: Cambiar Contraseña -->
+        <li class="nav-item">
+          <a href="#" class="nav-link" data-toggle="modal" data-target="#cambiarContrasenaModal">
+            <i class="nav-icon fas fa-key"></i>
+            <p>Cambiar Contraseña</p>
+          </a>
+        </li>
+
         <li class="nav-item mt-auto">
           <form
             action="{% url 'cerrar_sesion' %}"
@@ -159,3 +167,122 @@
     </nav>
   </div>
 </aside>
+
+<!-- Modal Cambiar Contraseña -->
+<div class="modal fade" id="cambiarContrasenaModal" tabindex="-1" role="dialog" aria-labelledby="cambiarContrasenaModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-primary">
+        <h5 class="modal-title" id="cambiarContrasenaModalLabel">
+          <i class="fas fa-key"></i> Cambiar Contraseña
+        </h5>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form id="formCambiarContrasena">
+        {% csrf_token %}
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="old_password">Contraseña Actual</label>
+            <input type="password" class="form-control" id="old_password" name="old_password" required>
+          </div>
+          <div class="form-group">
+            <label for="new_password1">Nueva Contraseña</label>
+            <input type="password" class="form-control" id="new_password1" name="new_password1" required>
+            <small class="form-text text-muted">
+              Mínimo 8 caracteres. No puede ser muy similar a tu información personal.
+            </small>
+          </div>
+          <div class="form-group">
+            <label for="new_password2">Confirmar Nueva Contraseña</label>
+            <input type="password" class="form-control" id="new_password2" name="new_password2" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" id="btnGuardarPassword">
+            <i class="fas fa-save"></i> Guardar Cambios
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Asegúrate de tener SweetAlert2 incluido -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  
+  // Usar onclick en el botón en lugar de submit en el formulario
+  document.getElementById('btnGuardarPassword').addEventListener('click', function() {
+    var form = document.getElementById('formCambiarContrasena');
+    var formData = new FormData(form);
+    
+    // Deshabilitar botón mientras procesa
+    this.disabled = true;
+    this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+    var btn = this;
+    
+    // Hacer la petición AJAX
+    fetch("{% url 'cambiar_contrasena' %}", {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> Guardar Cambios';
+      
+      if(data.success) {
+        // Cerrar modal
+        $('#cambiarContrasenaModal').modal('hide');
+        // Limpiar formulario
+        form.reset();
+        
+        // Mostrar alerta de éxito
+        Swal.fire({
+          icon: 'success',
+          title: '¡Éxito!',
+          text: 'Contraseña actualizada exitosamente',
+          confirmButtonText: 'Aceptar',
+          confirmButtonColor: '#007bff'
+        });
+        
+      } else {
+        // Mostrar errores
+        var errorMsg = data.errors.join('\n');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: errorMsg,
+          confirmButtonText: 'Aceptar',
+          confirmButtonColor: '#dc3545'
+        });
+      }
+    })
+    .catch(error => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> Guardar Cambios';
+      
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Ocurrió un error al procesar la solicitud',
+        confirmButtonText: 'Aceptar',
+        confirmButtonColor: '#dc3545'
+      });
+    });
+  });
+  
+  // Limpiar formulario al cerrar modal
+  $('#cambiarContrasenaModal').on('hidden.bs.modal', function () {
+    document.getElementById('formCambiarContrasena').reset();
+  });
+});
+</script>

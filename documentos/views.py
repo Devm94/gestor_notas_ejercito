@@ -11,8 +11,12 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 from django.contrib.auth import logout
 from django.db import transaction
-from django.http import JsonResponse
 from django.db.models import Q
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
+from django.views.decorators.http import require_http_methods
+from django.urls import reverse
+from django.db.models import Exists, OuterRef, Q
 
 @login_required
 def inicio(request):
@@ -809,10 +813,6 @@ def firma_auto(request):
         }
     return render(request, "mantenimiento/firma_aut.html", context)
 
-
-
-from django.urls import reverse
-
 def preregistro_datatable(request):
     draw = int(request.GET.get('draw', 1))
     start = int(request.GET.get('start', 0))
@@ -919,3 +919,151 @@ def preregistro_datatable(request):
         "recordsFiltered": records_filtered,
         "data": data
     })
+
+def procesamiento_datatable(request):
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 10))
+    search_value = request.GET.get('search[value]', '').strip()
+
+    # Subconsulta: verificar si ya fue procesada por el usuario
+    subquery = procesamiento_nota.objects.filter(
+        cod_nota=OuterRef('pk'),
+        cod_usuario=request.user
+    )
+
+    queryset = preregistro_nota.objects.annotate(
+        ya_procesada=Exists(subquery)
+    ).filter(
+        Q(cod_estado_preregistro_id=1) |  # pendientes
+        Q(ya_procesada=True)              # procesadas por el usuario
+    ).select_related(
+        'cod_procedencia',
+        'cod_estado_preregistro',
+        'cod_usuario'
+    )
+
+    records_total = queryset.count()
+
+    # 🔍 búsqueda
+    if search_value:
+        queryset = queryset.filter(
+            Q(no_exp__icontains=search_value) |
+            Q(cod_procedencia__descrip_corta__icontains=search_value) |
+            Q(cod_estado_preregistro__descrip_corta__icontains=search_value)
+        )
+
+    records_filtered = queryset.count()
+
+    queryset = queryset.order_by('-fch_rcp')[start:start + length]
+
+    data = []
+
+    for index, nota in enumerate(queryset, start=start + 1):
+
+        # 🎨 Color igual que tu template anterior
+        if nota.cod_estado_preregistro.id == 1:
+            row_class = 'background-color:#fff3cd;font-weight:bold;'
+        else:
+            row_class = ''
+
+        # 🔘 Acciones dinámicas
+        if nota.cod_estado_preregistro.id == 1:
+            acciones = f"""
+                <a class="dropdown-item text-info"
+                   href="#"
+                   data-toggle="modal"
+                   data-target="#modalAgregar"
+                   onclick="procesar({nota.id})">
+                   Procesar
+                </a>
+            """
+        else:
+            acciones = f"""
+                <a class="dropdown-item text-info"
+                   href="#"
+                   data-toggle="modal"
+                   data-target="#modalrevisar"
+                   onclick="revisar({nota.id})">
+                   Revisar
+                </a>
+
+                <a class="dropdown-item text-info"
+                   href="#"
+                   data-toggle="modal"
+                   data-target="#modal_expediente"
+                   onclick="ver_cumplimiento({nota.id})">
+                   Cumplimiento
+                </a>
+
+                <a class="dropdown-item text-success"
+                   href="#"
+                   data-toggle="modal"
+                   data-target="#modal_info_aprobado"
+                   onclick="llenarItemId({nota.id})">
+                   Disposición
+                </a>
+
+                <a class="dropdown-item text-info"
+                   href="/imprimir_nota_proc/{nota.id}/"
+                   target="_blank">
+                   Imprimir
+                </a>
+            """
+
+        data.append({
+            "contador": index,
+            "fecha": nota.fch_rcp_formateada(),
+            "remitente": nota.cod_procedencia.descrip_corta,
+            "expediente": nota.no_exp,
+            "estado": nota.cod_estado_preregistro.descrip_corta,
+            "responsable": nota.cod_usuario.username,
+            "acciones": f"""
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary btn-sm dropdown-toggle"
+                            type="button"
+                            data-toggle="dropdown">
+                        Acciones
+                    </button>
+                    <div class="dropdown-menu">
+                        {acciones}
+                    </div>
+                </div>
+            """,
+            "row_style": row_class
+        })
+
+    return JsonResponse({
+        "draw": draw,
+        "recordsTotal": records_total,
+        "recordsFiltered": records_filtered,
+        "data": data
+    })
+      
+@require_http_methods(["POST"])
+def cambiar_contrasena(request):
+    try:
+        form = PasswordChangeForm(request.user, request.POST)
+        
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)
+            return JsonResponse({
+                'success': True,
+                'message': 'Contraseña actualizada exitosamente.'
+            })
+        else:
+            errors = []
+            for field, error_list in form.errors.items():
+                for error in error_list:
+                    errors.append(str(error))
+            
+            return JsonResponse({
+                'success': False,
+                'errors': errors
+            })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'errors': [str(e)]
+        })
