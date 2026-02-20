@@ -950,7 +950,8 @@ def procesamiento_datatable(request):
         queryset = queryset.filter(
             Q(no_exp__icontains=search_value) |
             Q(cod_procedencia__descrip_corta__icontains=search_value) |
-            Q(cod_estado_preregistro__descrip_corta__icontains=search_value)
+            Q(cod_estado_preregistro__descrip_corta__icontains=search_value)|
+            Q(contenido__icontains=search_value) 
         )
 
     records_filtered = queryset.count()
